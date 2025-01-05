@@ -1,0 +1,14 @@
+services:
+  backend:
+    build:
+      context: ./backend
+    container_name: uvmanager-backend
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      DATABASE_URL: ${DATABASE_URL}
+      DATABASE_USERNAME: ${DATABASE_USERNAME}
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD}
+      KMA_SERVICE_KEY: ${KMA_SERVICE_KEY}
+    restart: always
