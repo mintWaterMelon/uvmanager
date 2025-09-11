@@ -1,0 +1,12 @@
+### Create notification setting
+POST http://localhost:8080/api/notification-settings
+Content-Type: application/json
+
+{
+  "region": "Seoul",
+  "uvThreshold": 6,
+  "enabled": true
+}
+
+### Get notification settings
+GET http://localhost:8080/api/notification-settings
