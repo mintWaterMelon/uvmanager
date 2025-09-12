@@ -3,6 +3,7 @@ package com.mintWaterMelon.uvalert.notification.controller;
 import com.mintWaterMelon.uvalert.notification.dto.NotificationSettingRequest;
 import com.mintWaterMelon.uvalert.notification.dto.NotificationSettingResponse;
 import com.mintWaterMelon.uvalert.notification.service.NotificationSettingService;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -21,7 +22,7 @@ public class NotificationSettingController {
 
     @PostMapping("/api/notification-settings")
     public NotificationSettingResponse createNotificationSetting(
-            @RequestBody NotificationSettingRequest request
+            @Valid @RequestBody NotificationSettingRequest request
     ) {
         return notificationSettingService.createNotificationSetting(request);
     }
