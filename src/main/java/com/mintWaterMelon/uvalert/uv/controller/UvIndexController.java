@@ -22,4 +22,11 @@ public class UvIndexController {
     ) {
         return uvIndexService.getUvIndex(areaNo, time);
     }
+
+    @GetMapping("/api/uv-index/current")
+    public UvIndexResponse getCurrentUvIndex(
+            @RequestParam String areaNo
+    ) {
+        return uvIndexService.getCurrentUvIndex(areaNo);
+    }
 }
