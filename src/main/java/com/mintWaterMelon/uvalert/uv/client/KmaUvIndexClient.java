@@ -7,11 +7,16 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
 @Component
 public class KmaUvIndexClient {
+
+    private static final DateTimeFormatter API_TIME_FORMATTER =
+            DateTimeFormatter.ofPattern("yyyyMMddHH");
 
     private final RestClient restClient;
     private final String serviceKey;
@@ -60,17 +65,21 @@ public class KmaUvIndexClient {
             throw new IllegalStateException("기상청 API 응답에 자외선 지수 데이터가 없습니다.");
         }
 
-        List<UvForecast> forecasts = extractForecasts(item);
+        String responseAreaNo = item.path("areaNo").asText();
+        String baseTime = item.path("date").asText();
+
+        List<UvForecast> forecasts = extractForecasts(item, baseTime);
 
         return new UvIndexResponse(
-                item.path("areaNo").asText(),
-                item.path("date").asText(),
+                responseAreaNo,
+                baseTime,
                 forecasts
         );
     }
 
-    private List<UvForecast> extractForecasts(JsonNode item) {
+    private List<UvForecast> extractForecasts(JsonNode item, String baseTimeText) {
         List<UvForecast> forecasts = new ArrayList<>();
+        LocalDateTime baseDateTime = parseBaseTime(baseTimeText);
 
         for (int hour = 0; hour <= 75; hour += 3) {
             String fieldName = "h" + hour;
@@ -87,9 +96,11 @@ public class KmaUvIndexClient {
             }
 
             int value = Integer.parseInt(valueText);
+            LocalDateTime forecastTime = baseDateTime.plusHours(hour);
 
             forecasts.add(new UvForecast(
                     hour,
+                    forecastTime,
                     value,
                     classifyUvIndex(value),
                     createMessage(value)
@@ -97,6 +108,10 @@ public class KmaUvIndexClient {
         }
 
         return forecasts;
+    }
+
+    private LocalDateTime parseBaseTime(String baseTimeText) {
+        return LocalDateTime.parse(baseTimeText, API_TIME_FORMATTER);
     }
 
     private String classifyUvIndex(int value) {

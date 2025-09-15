@@ -4,7 +4,7 @@ import java.util.List;
 
 public record UvIndexResponse(
         String areaNo,
-        String date,
+        String baseTime,
         List<UvForecast> forecasts
 ) {
 }
