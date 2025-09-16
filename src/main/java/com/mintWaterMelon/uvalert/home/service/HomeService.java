@@ -1,5 +1,7 @@
 package com.mintWaterMelon.uvalert.home.service;
 
+import com.mintWaterMelon.uvalert.area.dto.AreaResponse;
+import com.mintWaterMelon.uvalert.area.service.AreaService;
 import com.mintWaterMelon.uvalert.home.dto.HomeLocationResponse;
 import com.mintWaterMelon.uvalert.home.dto.HomeResponse;
 import com.mintWaterMelon.uvalert.uv.dto.UvForecast;
@@ -15,9 +17,14 @@ import java.util.List;
 public class HomeService {
 
     private final UvIndexService uvIndexService;
+    private final AreaService areaService;
 
-    public HomeService(UvIndexService uvIndexService) {
+    public HomeService(
+            UvIndexService uvIndexService,
+            AreaService areaService
+    ) {
         this.uvIndexService = uvIndexService;
+        this.areaService = areaService;
     }
 
     public HomeResponse getHome(String areaNo) {
@@ -30,9 +37,11 @@ public class HomeService {
                 currentTime
         );
 
+        AreaResponse area = areaService.getAreaByAreaNo(areaNo);
+
         HomeLocationResponse location = new HomeLocationResponse(
-                areaNo,
-                getTemporaryLocationName(areaNo)
+                area.areaNo(),
+                area.displayName()
         );
 
         return new HomeResponse(
@@ -52,13 +61,5 @@ public class HomeService {
                 .filter(forecast -> !forecast.forecastTime().isAfter(currentTime))
                 .max(Comparator.comparing(UvForecast::forecastTime))
                 .orElseGet(() -> forecasts.isEmpty() ? null : forecasts.get(0));
-    }
-
-    private String getTemporaryLocationName(String areaNo) {
-        if ("1100000000".equals(areaNo)) {
-            return "서울특별시";
-        }
-
-        return "알 수 없는 지역";
     }
 }
