@@ -1,6 +1,7 @@
 package com.mintWaterMelon.uvalert.area.loader;
 
 import com.mintWaterMelon.uvalert.area.dto.AreaResponse;
+import org.apache.poi.openxml4j.util.ZipSecureFile;
 import org.apache.poi.ss.usermodel.*;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
@@ -15,12 +16,16 @@ public class AreaExcelLoader {
     private static final String AREA_EXCEL_PATH = "data/area-codes.xlsx";
 
     public List<AreaResponse> loadAreas() {
+        ZipSecureFile.setMinInflateRatio(0.001);
+
         try (
                 InputStream inputStream = new ClassPathResource(AREA_EXCEL_PATH).getInputStream();
                 Workbook workbook = WorkbookFactory.create(inputStream)
         ) {
             Sheet sheet = workbook.getSheetAt(0);
             List<AreaResponse> areas = new ArrayList<>();
+
+            DataFormatter formatter = new DataFormatter();
 
             for (int rowIndex = 1; rowIndex <= sheet.getLastRowNum(); rowIndex++) {
                 Row row = sheet.getRow(rowIndex);
@@ -29,10 +34,10 @@ public class AreaExcelLoader {
                     continue;
                 }
 
-                String areaNo = getCellValueAsString(row.getCell(1));
-                String level1 = getCellValueAsString(row.getCell(2));
-                String level2 = getCellValueAsString(row.getCell(3));
-                String level3 = getCellValueAsString(row.getCell(4));
+                String areaNo = getCellValueAsString(row.getCell(1), formatter);
+                String level1 = getCellValueAsString(row.getCell(2), formatter);
+                String level2 = getCellValueAsString(row.getCell(3), formatter);
+                String level3 = getCellValueAsString(row.getCell(4), formatter);
 
                 if (areaNo.isBlank() || level1.isBlank()) {
                     continue;
@@ -53,21 +58,16 @@ public class AreaExcelLoader {
         }
     }
 
-    private String getCellValueAsString(Cell cell) {
+    private String getCellValueAsString(Cell cell, DataFormatter formatter) {
         if (cell == null) {
             return "";
         }
 
-        DataFormatter formatter = new DataFormatter();
         return formatter.formatCellValue(cell).trim();
     }
 
     private String createDisplayName(String level1, String level2, String level3) {
-        return String.join(" ",
-                        level1,
-                        level2,
-                        level3
-                )
+        return String.join(" ", level1, level2, level3)
                 .replaceAll("\\s+", " ")
                 .trim();
     }
