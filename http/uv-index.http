@@ -1,0 +1,5 @@
+### UV 수치 확인(지역 코드, 현재 시간 입력)
+GET http://localhost:8080/api/uv-index?areaNo=1100000000&time=2026053008
+
+### UV 수치 확인(지역 코드 입력)
+GET http://localhost:8080/api/uv-index/current?areaNo=1100000000
