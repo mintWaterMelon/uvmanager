@@ -1,0 +1,11 @@
+### 전체 지역 조회
+GET http://localhost:8080/api/areas
+
+### 지역 코드 검색
+GET http://localhost:8080/api/areas?keyword=서울
+
+### 지역 코드 검색
+GET http://localhost:8080/api/areas?keyword=청운효자동
+
+### 지역 검색(코드로)
+GET http://localhost:8080/api/areas?keyword=1100000000
