@@ -28,3 +28,6 @@ Content-Type: application/json
 
 ### 썬크림 알람 삭제
 DELETE http://localhost:8080/api/sunscreen-alerts/1
+
+### 썬크림 알람 체크
+GET http://localhost:8080/api/sunscreen-alerts/1/check
