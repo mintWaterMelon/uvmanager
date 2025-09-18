@@ -1,5 +1,6 @@
 package com.mintWaterMelon.uvalert.sunscreen.controller;
 
+import com.mintWaterMelon.uvalert.sunscreen.dto.SunscreenAlertCheckResponse;
 import com.mintWaterMelon.uvalert.sunscreen.dto.SunscreenAlertRequest;
 import com.mintWaterMelon.uvalert.sunscreen.dto.SunscreenAlertResponse;
 import com.mintWaterMelon.uvalert.sunscreen.service.SunscreenAlertService;
@@ -52,5 +53,12 @@ public class SunscreenAlertController {
         sunscreenAlertService.deleteSunscreenAlert(id);
 
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/api/sunscreen-alerts/{id}/check")
+    public SunscreenAlertCheckResponse checkSunscreenAlert(
+            @PathVariable Long id
+    ) {
+        return sunscreenAlertService.checkSunscreenAlert(id);
     }
 }
