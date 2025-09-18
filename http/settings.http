@@ -1,0 +1,13 @@
+### setting 값 얻기
+GET http://localhost:8080/api/settings
+
+### setting 값 수정
+PUT http://localhost:8080/api/settings
+Content-Type: application/json
+
+{
+  "defaultAreaNo": "1100000000",
+  "defaultUvThreshold": 8,
+  "sunscreenAlertEnabled": true,
+  "defaultAlertTime": "09:00"
+}
