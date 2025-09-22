@@ -75,7 +75,7 @@ mobile/.DS_Store
 # typescript
 *.tsbuildinfo
 
-example
+app-example
 
 # generated native folders
 mobile/ios/
