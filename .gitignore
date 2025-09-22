@@ -1,7 +1,8 @@
-HELP.md
-.gradle
-build/
-!gradle/wrapper/gradle-wrapper.jar
+# Backend
+backend/.gradle
+backend/build/
+backend/HELP.md
+!backend/gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**/build/
 !**/src/test/**/build/
 
@@ -13,7 +14,7 @@ build/
 .settings
 .springBeans
 .sts4-cache
-bin/
+backend/bin/
 !**/src/main/**/bin/
 !**/src/test/**/bin/
 
@@ -22,7 +23,7 @@ bin/
 *.iws
 *.iml
 *.ipr
-out/
+backend/out/
 !**/src/main/**/out/
 !**/src/test/**/out/
 
