@@ -80,3 +80,6 @@ example
 # generated native folders
 mobile/ios/
 mobile/android/
+
+# expo 실행시 생김
+mobile/.gitignore
