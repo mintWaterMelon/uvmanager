@@ -1,6 +1,17 @@
+import { useEffect } from "react";
 import { StyleSheet, Text, View } from "react-native";
+import { getHome } from "../api/homeApi";
 
 export default function HomeScreen() {
+    useEffect(() => {
+        getHome("1100000000")
+            .then((data) => {
+                console.log("Home API result:", data);
+            })
+            .catch((error) => {
+                console.error("Home API error:", error);
+            });
+    }, []);
     return (
         <View style={styles.container}>
             <Text style={styles.title}>UV Alert</Text>
