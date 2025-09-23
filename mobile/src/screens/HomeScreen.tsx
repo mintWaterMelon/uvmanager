@@ -1,31 +1,36 @@
-import { useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import {
     ActivityIndicator,
+    Pressable,
     ScrollView,
     StyleSheet,
     Text,
     View,
 } from "react-native";
+import { useFocusEffect } from "expo-router";
 
 import { getHome, HomeResponse, UvForecast } from "../api/homeApi";
-
-const DEFAULT_AREA_NO = "1100000000";
+import { getSettings } from "../api/settingApi";
 
 export default function HomeScreen() {
     const [home, setHome] = useState<HomeResponse | null>(null);
     const [loading, setLoading] = useState(true);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-    useEffect(() => {
-        loadHome();
-    }, []);
+    useFocusEffect(
+        useCallback(() => {
+            loadHomeWithSettings();
+        }, [])
+    );
 
-    async function loadHome() {
+    async function loadHomeWithSettings() {
         try {
             setLoading(true);
             setErrorMessage(null);
 
-            const data = await getHome(DEFAULT_AREA_NO);
+            const settings = await getSettings();
+            const data = await getHome(settings.defaultAreaNo);
+
             setHome(data);
         } catch (error) {
             console.error(error);
@@ -49,13 +54,23 @@ export default function HomeScreen() {
             <View style={styles.centerContainer}>
                 <Text style={styles.errorTitle}>오류 발생</Text>
                 <Text style={styles.errorMessage}>{errorMessage}</Text>
+
+                <Pressable style={styles.retryButton} onPress={loadHomeWithSettings}>
+                    <Text style={styles.retryButtonText}>다시 시도</Text>
+                </Pressable>
             </View>
         );
     }
 
     return (
         <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-            <Text style={styles.title}>UV Alert</Text>
+            <View style={styles.headerRow}>
+                <Text style={styles.title}>UV Alert</Text>
+
+                <Pressable style={styles.refreshButton} onPress={loadHomeWithSettings}>
+                    <Text style={styles.refreshButtonText}>새로고침</Text>
+                </Pressable>
+            </View>
 
             <View style={styles.card}>
                 <Text style={styles.label}>현재 시간</Text>
@@ -97,7 +112,10 @@ export default function HomeScreen() {
                     <Text style={styles.message}>시간대별 UV 정보가 없습니다.</Text>
                 ) : (
                     home.forecasts.map((forecast) => (
-                        <ForecastRow key={forecast.hourAfter} forecast={forecast} />
+                        <ForecastRow
+                            key={`${forecast.hourAfter}-${forecast.forecastTime}`}
+                            forecast={forecast}
+                        />
                     ))
                 )}
             </View>
@@ -196,10 +214,37 @@ const styles = StyleSheet.create({
         fontSize: 15,
         color: "#555555",
     },
+    retryButton: {
+        marginTop: 16,
+        backgroundColor: "#2563EB",
+        paddingVertical: 12,
+        paddingHorizontal: 20,
+        borderRadius: 12,
+    },
+    retryButtonText: {
+        color: "#FFFFFF",
+        fontWeight: "700",
+    },
+    headerRow: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
+    },
     title: {
         fontSize: 28,
         fontWeight: "800",
         marginBottom: 8,
+    },
+    refreshButton: {
+        backgroundColor: "#111827",
+        paddingVertical: 8,
+        paddingHorizontal: 12,
+        borderRadius: 10,
+    },
+    refreshButtonText: {
+        color: "#FFFFFF",
+        fontSize: 12,
+        fontWeight: "700",
     },
     card: {
         backgroundColor: "#FFFFFF",
