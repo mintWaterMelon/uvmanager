@@ -1,61 +1,215 @@
-import { useEffect } from "react";
-import { StyleSheet, Text, View } from "react-native";
-import { getHome } from "../api/homeApi";
+import { useEffect, useState } from "react";
+import {
+    ActivityIndicator,
+    ScrollView,
+    StyleSheet,
+    Text,
+    View,
+} from "react-native";
+
+import { getHome, HomeResponse, UvForecast } from "../api/homeApi";
+
+const DEFAULT_AREA_NO = "1100000000";
 
 export default function HomeScreen() {
+    const [home, setHome] = useState<HomeResponse | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
     useEffect(() => {
-        getHome("1100000000")
-            .then((data) => {
-                console.log("Home API result:", data);
-            })
-            .catch((error) => {
-                console.error("Home API error:", error);
-            });
+        loadHome();
     }, []);
+
+    async function loadHome() {
+        try {
+            setLoading(true);
+            setErrorMessage(null);
+
+            const data = await getHome(DEFAULT_AREA_NO);
+            setHome(data);
+        } catch (error) {
+            console.error(error);
+            setErrorMessage("홈 화면 데이터를 불러오지 못했습니다.");
+        } finally {
+            setLoading(false);
+        }
+    }
+
+    if (loading) {
+        return (
+            <View style={styles.centerContainer}>
+                <ActivityIndicator size="large" />
+                <Text style={styles.loadingText}>자외선 정보를 불러오는 중입니다...</Text>
+            </View>
+        );
+    }
+
+    if (errorMessage || home === null) {
+        return (
+            <View style={styles.centerContainer}>
+                <Text style={styles.errorTitle}>오류 발생</Text>
+                <Text style={styles.errorMessage}>{errorMessage}</Text>
+            </View>
+        );
+    }
+
     return (
-        <View style={styles.container}>
+        <ScrollView style={styles.container} contentContainerStyle={styles.content}>
             <Text style={styles.title}>UV Alert</Text>
 
             <View style={styles.card}>
                 <Text style={styles.label}>현재 시간</Text>
-                <Text style={styles.value}>TBD</Text>
+                <Text style={styles.value}>{formatDateTime(home.currentTime)}</Text>
             </View>
 
             <View style={styles.card}>
                 <Text style={styles.label}>현재 위치</Text>
-                <Text style={styles.value}>서울특별시</Text>
+                <Text style={styles.value}>{home.location.name}</Text>
+                <Text style={styles.subText}>지역 코드: {home.location.areaNo}</Text>
             </View>
 
-            <View style={styles.card}>
+            <View style={styles.uvCard}>
                 <Text style={styles.label}>현재 UV 지수</Text>
-                <Text style={styles.uvValue}>TBD</Text>
-                <Text style={styles.message}>자외선 정보를 불러올 예정입니다.</Text>
+
+                {home.currentUv ? (
+                    <>
+                        <Text style={styles.uvValue}>{home.currentUv.value}</Text>
+                        <Text style={styles.uvLevel}>{home.currentUv.level}</Text>
+                        <Text style={styles.message}>{home.currentUv.message}</Text>
+                        <Text style={styles.subText}>
+                            예보 시간: {formatDateTime(home.currentUv.forecastTime)}
+                        </Text>
+                    </>
+                ) : (
+                    <Text style={styles.message}>현재 UV 정보를 찾을 수 없습니다.</Text>
+                )}
             </View>
 
             <View style={styles.card}>
-                <Text style={styles.label}>시간대별 UV 지수</Text>
-                <Text style={styles.message}>API 연결 후 표시됩니다.</Text>
+                <Text style={styles.label}>기준 발표 시각</Text>
+                <Text style={styles.value}>{formatBaseTime(home.baseTime)}</Text>
+            </View>
+
+            <View style={styles.card}>
+                <Text style={styles.sectionTitle}>시간대별 UV 지수</Text>
+
+                {home.forecasts.length === 0 ? (
+                    <Text style={styles.message}>시간대별 UV 정보가 없습니다.</Text>
+                ) : (
+                    home.forecasts.map((forecast) => (
+                        <ForecastRow key={forecast.hourAfter} forecast={forecast} />
+                    ))
+                )}
+            </View>
+        </ScrollView>
+    );
+}
+
+function ForecastRow({ forecast }: { forecast: UvForecast }) {
+    return (
+        <View style={styles.forecastRow}>
+            <View>
+                <Text style={styles.forecastTime}>
+                    {formatTimeOnly(forecast.forecastTime)}
+                </Text>
+                <Text style={styles.subText}>{forecast.hourAfter}시간 후</Text>
+            </View>
+
+            <View style={styles.forecastRight}>
+                <Text style={styles.forecastValue}>UV {forecast.value}</Text>
+                <Text style={styles.forecastLevel}>{forecast.level}</Text>
             </View>
         </View>
     );
 }
 
+function formatDateTime(value: string) {
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) {
+        return value;
+    }
+
+    return date.toLocaleString("ko-KR", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+    });
+}
+
+function formatTimeOnly(value: string) {
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) {
+        return value;
+    }
+
+    return date.toLocaleTimeString("ko-KR", {
+        hour: "2-digit",
+        minute: "2-digit",
+    });
+}
+
+function formatBaseTime(baseTime: string) {
+    if (baseTime.length !== 10) {
+        return baseTime;
+    }
+
+    const year = baseTime.slice(0, 4);
+    const month = baseTime.slice(4, 6);
+    const day = baseTime.slice(6, 8);
+    const hour = baseTime.slice(8, 10);
+
+    return `${year}-${month}-${day} ${hour}:00`;
+}
+
 const styles = StyleSheet.create({
     container: {
         flex: 1,
+        backgroundColor: "#F7F8FA",
+    },
+    content: {
         padding: 20,
         gap: 16,
+        paddingBottom: 32,
+    },
+    centerContainer: {
+        flex: 1,
+        justifyContent: "center",
+        alignItems: "center",
+        padding: 20,
         backgroundColor: "#F7F8FA",
+    },
+    loadingText: {
+        marginTop: 12,
+        fontSize: 14,
+        color: "#555555",
+    },
+    errorTitle: {
+        fontSize: 22,
+        fontWeight: "700",
+        marginBottom: 8,
+    },
+    errorMessage: {
+        fontSize: 15,
+        color: "#555555",
     },
     title: {
         fontSize: 28,
-        fontWeight: "700",
+        fontWeight: "800",
         marginBottom: 8,
     },
     card: {
         backgroundColor: "#FFFFFF",
         padding: 16,
         borderRadius: 16,
+    },
+    uvCard: {
+        backgroundColor: "#FFFFFF",
+        padding: 20,
+        borderRadius: 20,
     },
     label: {
         fontSize: 14,
@@ -64,14 +218,54 @@ const styles = StyleSheet.create({
     },
     value: {
         fontSize: 20,
-        fontWeight: "600",
+        fontWeight: "700",
+    },
+    subText: {
+        marginTop: 4,
+        fontSize: 12,
+        color: "#777777",
     },
     uvValue: {
-        fontSize: 40,
-        fontWeight: "800",
+        fontSize: 56,
+        fontWeight: "900",
+    },
+    uvLevel: {
+        fontSize: 18,
+        fontWeight: "700",
+        marginBottom: 8,
     },
     message: {
         fontSize: 14,
         color: "#444444",
+        lineHeight: 20,
+    },
+    sectionTitle: {
+        fontSize: 18,
+        fontWeight: "700",
+        marginBottom: 12,
+    },
+    forecastRow: {
+        paddingVertical: 12,
+        borderTopWidth: 1,
+        borderTopColor: "#EEEEEE",
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
+    },
+    forecastTime: {
+        fontSize: 16,
+        fontWeight: "700",
+    },
+    forecastRight: {
+        alignItems: "flex-end",
+    },
+    forecastValue: {
+        fontSize: 16,
+        fontWeight: "800",
+    },
+    forecastLevel: {
+        marginTop: 2,
+        fontSize: 12,
+        color: "#666666",
     },
 });
