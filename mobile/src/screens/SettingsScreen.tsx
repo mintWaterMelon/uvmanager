@@ -12,6 +12,7 @@ import {
 
 import { AreaResponse, searchAreas } from "../api/areaApi";
 import { getSettings, updateSettings } from "../api/settingApi";
+import ScreenContainer from "../components/ScreenContainer";
 
 export default function SettingsScreen() {
     const [defaultAreaNo, setDefaultAreaNo] = useState("1100000000");
@@ -125,113 +126,117 @@ export default function SettingsScreen() {
 
     if (loading && !defaultAreaNo) {
         return (
-            <View style={styles.centerContainer}>
-                <ActivityIndicator size="large" />
-                <Text style={styles.loadingText}>설정을 불러오는 중입니다...</Text>
-            </View>
+            <ScreenContainer>
+                <View style={styles.centerContainer}>
+                    <ActivityIndicator size="large" />
+                    <Text style={styles.loadingText}>설정을 불러오는 중입니다...</Text>
+                </View>
+            </ScreenContainer>
         );
     }
 
     return (
-        <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-            <Text style={styles.title}>설정</Text>
+        <ScreenContainer>
+            <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+                <Text style={styles.title}>설정</Text>
 
-            <View style={styles.card}>
-                <Text style={styles.sectionTitle}>기본 지역</Text>
+                <View style={styles.card}>
+                    <Text style={styles.sectionTitle}>기본 지역</Text>
 
-                <Text style={styles.label}>지역 검색</Text>
+                    <Text style={styles.label}>지역 검색</Text>
 
-                <View style={styles.searchRow}>
-                    <TextInput
-                        style={styles.input}
-                        value={keyword}
-                        onChangeText={setKeyword}
-                        placeholder="예: 서울, 종로구, 청운효자동"
-                        autoCapitalize="none"
-                    />
+                    <View style={styles.searchRow}>
+                        <TextInput
+                            style={styles.input}
+                            value={keyword}
+                            onChangeText={setKeyword}
+                            placeholder="예: 서울, 종로구, 청운효자동"
+                            autoCapitalize="none"
+                        />
 
-                    <Pressable style={styles.searchButton} onPress={handleSearchArea}>
-                        <Text style={styles.searchButtonText}>검색</Text>
-                    </Pressable>
+                        <Pressable style={styles.searchButton} onPress={handleSearchArea}>
+                            <Text style={styles.searchButtonText}>검색</Text>
+                        </Pressable>
+                    </View>
+
+                    {areas.length > 0 && (
+                        <View style={styles.resultBox}>
+                            {areas.map((area) => (
+                                <Pressable
+                                    key={area.areaNo}
+                                    style={styles.resultItem}
+                                    onPress={() => handleSelectArea(area)}
+                                >
+                                    <Text style={styles.resultName}>{area.displayName}</Text>
+                                    <Text style={styles.resultCode}>{area.areaNo}</Text>
+                                </Pressable>
+                            ))}
+                        </View>
+                    )}
+
+                    <View style={styles.selectedBox}>
+                        <Text style={styles.label}>선택된 기본 지역</Text>
+                        <Text style={styles.value}>{defaultLocationName}</Text>
+                        <Text style={styles.subText}>지역 코드: {defaultAreaNo}</Text>
+                    </View>
                 </View>
 
-                {areas.length > 0 && (
-                    <View style={styles.resultBox}>
-                        {areas.map((area) => (
-                            <Pressable
-                                key={area.areaNo}
-                                style={styles.resultItem}
-                                onPress={() => handleSelectArea(area)}
-                            >
-                                <Text style={styles.resultName}>{area.displayName}</Text>
-                                <Text style={styles.resultCode}>{area.areaNo}</Text>
-                            </Pressable>
-                        ))}
+                <View style={styles.card}>
+                    <Text style={styles.sectionTitle}>알림 기본값</Text>
+
+                    <Text style={styles.label}>기본 UV 기준값</Text>
+                    <TextInput
+                        style={styles.input}
+                        value={defaultUvThreshold}
+                        onChangeText={setDefaultUvThreshold}
+                        placeholder="예: 6"
+                        keyboardType="number-pad"
+                    />
+
+                    <Text style={styles.label}>기본 알림 시간</Text>
+                    <TextInput
+                        style={styles.input}
+                        value={defaultAlertTime}
+                        onChangeText={setDefaultAlertTime}
+                        placeholder="예: 08:00"
+                    />
+
+                    <View style={styles.switchRow}>
+                        <View>
+                            <Text style={styles.label}>선크림 알림 사용</Text>
+                            <Text style={styles.subText}>
+                                {sunscreenAlertEnabled ? "사용" : "사용 안 함"}
+                            </Text>
+                        </View>
+
+                        <Switch
+                            value={sunscreenAlertEnabled}
+                            onValueChange={setSunscreenAlertEnabled}
+                        />
+                    </View>
+                </View>
+
+                {loading && (
+                    <View style={styles.statusBox}>
+                        <ActivityIndicator size="small" />
+                        <Text style={styles.statusText}>처리 중...</Text>
                     </View>
                 )}
 
-                <View style={styles.selectedBox}>
-                    <Text style={styles.label}>선택된 기본 지역</Text>
-                    <Text style={styles.value}>{defaultLocationName}</Text>
-                    <Text style={styles.subText}>지역 코드: {defaultAreaNo}</Text>
-                </View>
-            </View>
+                {message && <Text style={styles.successText}>{message}</Text>}
+                {errorMessage && <Text style={styles.errorText}>{errorMessage}</Text>}
 
-            <View style={styles.card}>
-                <Text style={styles.sectionTitle}>알림 기본값</Text>
-
-                <Text style={styles.label}>기본 UV 기준값</Text>
-                <TextInput
-                    style={styles.input}
-                    value={defaultUvThreshold}
-                    onChangeText={setDefaultUvThreshold}
-                    placeholder="예: 6"
-                    keyboardType="number-pad"
-                />
-
-                <Text style={styles.label}>기본 알림 시간</Text>
-                <TextInput
-                    style={styles.input}
-                    value={defaultAlertTime}
-                    onChangeText={setDefaultAlertTime}
-                    placeholder="예: 08:00"
-                />
-
-                <View style={styles.switchRow}>
-                    <View>
-                        <Text style={styles.label}>선크림 알림 사용</Text>
-                        <Text style={styles.subText}>
-                            {sunscreenAlertEnabled ? "사용" : "사용 안 함"}
-                        </Text>
-                    </View>
-
-                    <Switch
-                        value={sunscreenAlertEnabled}
-                        onValueChange={setSunscreenAlertEnabled}
-                    />
-                </View>
-            </View>
-
-            {loading && (
-                <View style={styles.statusBox}>
-                    <ActivityIndicator size="small" />
-                    <Text style={styles.statusText}>처리 중...</Text>
-                </View>
-            )}
-
-            {message && <Text style={styles.successText}>{message}</Text>}
-            {errorMessage && <Text style={styles.errorText}>{errorMessage}</Text>}
-
-            <Pressable
-                style={[styles.saveButton, saving && styles.disabledButton]}
-                onPress={handleSaveSettings}
-                disabled={saving}
-            >
-                <Text style={styles.saveButtonText}>
-                    {saving ? "저장 중..." : "설정 저장"}
-                </Text>
-            </Pressable>
-        </ScrollView>
+                <Pressable
+                    style={[styles.saveButton, saving && styles.disabledButton]}
+                    onPress={handleSaveSettings}
+                    disabled={saving}
+                >
+                    <Text style={styles.saveButtonText}>
+                        {saving ? "저장 중..." : "설정 저장"}
+                    </Text>
+                </Pressable>
+            </ScrollView>
+        </ScreenContainer>
     );
 }
 
@@ -251,7 +256,7 @@ const styles = StyleSheet.create({
     content: {
         padding: 20,
         gap: 16,
-        paddingBottom: 32,
+        paddingBottom: 48,
     },
     centerContainer: {
         flex: 1,

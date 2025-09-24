@@ -11,6 +11,7 @@ import { useFocusEffect } from "expo-router";
 
 import { getHome, HomeResponse, UvForecast } from "../api/homeApi";
 import { getSettings } from "../api/settingApi";
+import ScreenContainer from "../components/ScreenContainer";
 
 export default function HomeScreen() {
     const [home, setHome] = useState<HomeResponse | null>(null);
@@ -42,84 +43,90 @@ export default function HomeScreen() {
 
     if (loading) {
         return (
-            <View style={styles.centerContainer}>
-                <ActivityIndicator size="large" />
-                <Text style={styles.loadingText}>자외선 정보를 불러오는 중입니다...</Text>
-            </View>
+            <ScreenContainer>
+                <View style={styles.centerContainer}>
+                    <ActivityIndicator size="large" />
+                    <Text style={styles.loadingText}>자외선 정보를 불러오는 중입니다...</Text>
+                </View>
+            </ScreenContainer>
         );
     }
 
     if (errorMessage || home === null) {
         return (
-            <View style={styles.centerContainer}>
-                <Text style={styles.errorTitle}>오류 발생</Text>
-                <Text style={styles.errorMessage}>{errorMessage}</Text>
+            <ScreenContainer>
+                <View style={styles.centerContainer}>
+                    <Text style={styles.errorTitle}>오류 발생</Text>
+                    <Text style={styles.errorMessage}>{errorMessage}</Text>
 
-                <Pressable style={styles.retryButton} onPress={loadHomeWithSettings}>
-                    <Text style={styles.retryButtonText}>다시 시도</Text>
-                </Pressable>
-            </View>
+                    <Pressable style={styles.retryButton} onPress={loadHomeWithSettings}>
+                        <Text style={styles.retryButtonText}>다시 시도</Text>
+                    </Pressable>
+                </View>
+            </ScreenContainer>
         );
     }
 
     return (
-        <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-            <View style={styles.headerRow}>
-                <Text style={styles.title}>UV Alert</Text>
+        <ScreenContainer>
+            <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+                <View style={styles.headerRow}>
+                    <Text style={styles.title}>UV Alert</Text>
 
-                <Pressable style={styles.refreshButton} onPress={loadHomeWithSettings}>
-                    <Text style={styles.refreshButtonText}>새로고침</Text>
-                </Pressable>
-            </View>
+                    <Pressable style={styles.refreshButton} onPress={loadHomeWithSettings}>
+                        <Text style={styles.refreshButtonText}>새로고침</Text>
+                    </Pressable>
+                </View>
 
-            <View style={styles.card}>
-                <Text style={styles.label}>현재 시간</Text>
-                <Text style={styles.value}>{formatDateTime(home.currentTime)}</Text>
-            </View>
+                <View style={styles.card}>
+                    <Text style={styles.label}>현재 시간</Text>
+                    <Text style={styles.value}>{formatDateTime(home.currentTime)}</Text>
+                </View>
 
-            <View style={styles.card}>
-                <Text style={styles.label}>현재 위치</Text>
-                <Text style={styles.value}>{home.location.name}</Text>
-                <Text style={styles.subText}>지역 코드: {home.location.areaNo}</Text>
-            </View>
+                <View style={styles.card}>
+                    <Text style={styles.label}>현재 위치</Text>
+                    <Text style={styles.value}>{home.location.name}</Text>
+                    <Text style={styles.subText}>지역 코드: {home.location.areaNo}</Text>
+                </View>
 
-            <View style={styles.uvCard}>
-                <Text style={styles.label}>현재 UV 지수</Text>
+                <View style={styles.uvCard}>
+                    <Text style={styles.label}>현재 UV 지수</Text>
 
-                {home.currentUv ? (
-                    <>
-                        <Text style={styles.uvValue}>{home.currentUv.value}</Text>
-                        <Text style={styles.uvLevel}>{home.currentUv.level}</Text>
-                        <Text style={styles.message}>{home.currentUv.message}</Text>
-                        <Text style={styles.subText}>
-                            예보 시간: {formatDateTime(home.currentUv.forecastTime)}
-                        </Text>
-                    </>
-                ) : (
-                    <Text style={styles.message}>현재 UV 정보를 찾을 수 없습니다.</Text>
-                )}
-            </View>
+                    {home.currentUv ? (
+                        <>
+                            <Text style={styles.uvValue}>{home.currentUv.value}</Text>
+                            <Text style={styles.uvLevel}>{home.currentUv.level}</Text>
+                            <Text style={styles.message}>{home.currentUv.message}</Text>
+                            <Text style={styles.subText}>
+                                예보 시간: {formatDateTime(home.currentUv.forecastTime)}
+                            </Text>
+                        </>
+                    ) : (
+                        <Text style={styles.message}>현재 UV 정보를 찾을 수 없습니다.</Text>
+                    )}
+                </View>
 
-            <View style={styles.card}>
-                <Text style={styles.label}>기준 발표 시각</Text>
-                <Text style={styles.value}>{formatBaseTime(home.baseTime)}</Text>
-            </View>
+                <View style={styles.card}>
+                    <Text style={styles.label}>기준 발표 시각</Text>
+                    <Text style={styles.value}>{formatBaseTime(home.baseTime)}</Text>
+                </View>
 
-            <View style={styles.card}>
-                <Text style={styles.sectionTitle}>시간대별 UV 지수</Text>
+                <View style={styles.card}>
+                    <Text style={styles.sectionTitle}>시간대별 UV 지수</Text>
 
-                {home.forecasts.length === 0 ? (
-                    <Text style={styles.message}>시간대별 UV 정보가 없습니다.</Text>
-                ) : (
-                    home.forecasts.map((forecast) => (
-                        <ForecastRow
-                            key={`${forecast.hourAfter}-${forecast.forecastTime}`}
-                            forecast={forecast}
-                        />
-                    ))
-                )}
-            </View>
-        </ScrollView>
+                    {home.forecasts.length === 0 ? (
+                        <Text style={styles.message}>시간대별 UV 정보가 없습니다.</Text>
+                    ) : (
+                        home.forecasts.map((forecast) => (
+                            <ForecastRow
+                                key={`${forecast.hourAfter}-${forecast.forecastTime}`}
+                                forecast={forecast}
+                            />
+                        ))
+                    )}
+                </View>
+            </ScrollView>
+        </ScreenContainer>
     );
 }
 
@@ -191,7 +198,7 @@ const styles = StyleSheet.create({
     content: {
         padding: 20,
         gap: 16,
-        paddingBottom: 32,
+        paddingBottom: 48,
     },
     centerContainer: {
         flex: 1,

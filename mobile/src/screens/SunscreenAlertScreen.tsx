@@ -17,6 +17,7 @@ import {
     SunscreenAlertCheckResponse,
     SunscreenAlertResponse,
 } from "../api/sunscreenAlertApi";
+import ScreenContainer from "../components/ScreenContainer";
 
 const DEFAULT_AREA_NO = "1100000000";
 
@@ -101,124 +102,126 @@ export default function SunscreenAlertScreen() {
     }
 
     return (
-        <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-            <Text style={styles.title}>선크림 알림</Text>
+        <ScreenContainer>
+            <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+                <Text style={styles.title}>선크림 알림</Text>
 
-            <View style={styles.card}>
-                <Text style={styles.sectionTitle}>알림 설정 만들기</Text>
+                <View style={styles.card}>
+                    <Text style={styles.sectionTitle}>알림 설정 만들기</Text>
 
-                <Text style={styles.label}>지역 코드</Text>
-                <TextInput
-                    style={styles.input}
-                    value={areaNo}
-                    onChangeText={setAreaNo}
-                    placeholder="예: 1100000000"
-                    keyboardType="number-pad"
-                />
+                    <Text style={styles.label}>지역 코드</Text>
+                    <TextInput
+                        style={styles.input}
+                        value={areaNo}
+                        onChangeText={setAreaNo}
+                        placeholder="예: 1100000000"
+                        keyboardType="number-pad"
+                    />
 
-                <Text style={styles.label}>알림 시간</Text>
-                <TextInput
-                    style={styles.input}
-                    value={alertTime}
-                    onChangeText={setAlertTime}
-                    placeholder="예: 08:00"
-                />
+                    <Text style={styles.label}>알림 시간</Text>
+                    <TextInput
+                        style={styles.input}
+                        value={alertTime}
+                        onChangeText={setAlertTime}
+                        placeholder="예: 08:00"
+                    />
 
-                <Text style={styles.label}>알림 기준 UV 지수</Text>
-                <TextInput
-                    style={styles.input}
-                    value={uvThreshold}
-                    onChangeText={setUvThreshold}
-                    placeholder="예: 6"
-                    keyboardType="number-pad"
-                />
+                    <Text style={styles.label}>알림 기준 UV 지수</Text>
+                    <TextInput
+                        style={styles.input}
+                        value={uvThreshold}
+                        onChangeText={setUvThreshold}
+                        placeholder="예: 6"
+                        keyboardType="number-pad"
+                    />
 
-                <View style={styles.switchRow}>
-                    <View>
-                        <Text style={styles.label}>알림 사용 여부</Text>
-                        <Text style={styles.subText}>{enabled ? "ON" : "OFF"}</Text>
+                    <View style={styles.switchRow}>
+                        <View>
+                            <Text style={styles.label}>알림 사용 여부</Text>
+                            <Text style={styles.subText}>{enabled ? "ON" : "OFF"}</Text>
+                        </View>
+
+                        <Switch value={enabled} onValueChange={setEnabled} />
                     </View>
 
-                    <Switch value={enabled} onValueChange={setEnabled} />
+                    <Pressable style={styles.primaryButton} onPress={handleCreateAlert}>
+                        <Text style={styles.primaryButtonText}>알림 설정 저장</Text>
+                    </Pressable>
                 </View>
 
-                <Pressable style={styles.primaryButton} onPress={handleCreateAlert}>
-                    <Text style={styles.primaryButtonText}>알림 설정 저장</Text>
-                </Pressable>
-            </View>
-
-            {loading && (
-                <View style={styles.statusBox}>
-                    <ActivityIndicator size="small" />
-                    <Text style={styles.statusText}>처리 중...</Text>
-                </View>
-            )}
-
-            {message && <Text style={styles.successText}>{message}</Text>}
-            {errorMessage && <Text style={styles.errorText}>{errorMessage}</Text>}
-
-            <View style={styles.card}>
-                <Text style={styles.sectionTitle}>저장된 알림 설정</Text>
-
-                {alerts.length === 0 ? (
-                    <Text style={styles.message}>저장된 알림 설정이 없습니다.</Text>
-                ) : (
-                    alerts.map((alert) => (
-                        <View key={alert.id} style={styles.alertItem}>
-                            <View>
-                                <Text style={styles.alertTitle}>{alert.locationName}</Text>
-                                <Text style={styles.subText}>지역 코드: {alert.areaNo}</Text>
-                                <Text style={styles.subText}>
-                                    알림 시간: {formatTime(alert.alertTime)}
-                                </Text>
-                                <Text style={styles.subText}>
-                                    기준 UV 지수: {alert.uvThreshold} 이상
-                                </Text>
-                                <Text style={styles.subText}>
-                                    상태: {alert.enabled ? "ON" : "OFF"}
-                                </Text>
-                            </View>
-
-                            <Pressable
-                                style={styles.secondaryButton}
-                                onPress={() => handleCheckAlert(alert.id)}
-                            >
-                                <Text style={styles.secondaryButtonText}>알림 판단</Text>
-                            </Pressable>
-                        </View>
-                    ))
+                {loading && (
+                    <View style={styles.statusBox}>
+                        <ActivityIndicator size="small" />
+                        <Text style={styles.statusText}>처리 중...</Text>
+                    </View>
                 )}
-            </View>
 
-            {checkResult && (
+                {message && <Text style={styles.successText}>{message}</Text>}
+                {errorMessage && <Text style={styles.errorText}>{errorMessage}</Text>}
+
                 <View style={styles.card}>
-                    <Text style={styles.sectionTitle}>알림 판단 결과</Text>
+                    <Text style={styles.sectionTitle}>저장된 알림 설정</Text>
 
-                    <Text style={styles.value}>{checkResult.locationName}</Text>
-                    <Text style={styles.subText}>
-                        현재 UV 지수: {checkResult.currentUvValue}
-                    </Text>
-                    <Text style={styles.subText}>
-                        현재 UV 단계: {checkResult.currentUvLevel}
-                    </Text>
-                    <Text style={styles.subText}>
-                        알림 기준: {checkResult.uvThreshold} 이상
-                    </Text>
-                    <Text
-                        style={[
-                            styles.notifyResult,
-                            checkResult.shouldNotify
-                                ? styles.notifyOn
-                                : styles.notifyOff,
-                        ]}
-                    >
-                        {checkResult.shouldNotify ? "알림 필요" : "알림 불필요"}
-                    </Text>
+                    {alerts.length === 0 ? (
+                        <Text style={styles.message}>저장된 알림 설정이 없습니다.</Text>
+                    ) : (
+                        alerts.map((alert) => (
+                            <View key={alert.id} style={styles.alertItem}>
+                                <View>
+                                    <Text style={styles.alertTitle}>{alert.locationName}</Text>
+                                    <Text style={styles.subText}>지역 코드: {alert.areaNo}</Text>
+                                    <Text style={styles.subText}>
+                                        알림 시간: {formatTime(alert.alertTime)}
+                                    </Text>
+                                    <Text style={styles.subText}>
+                                        기준 UV 지수: {alert.uvThreshold} 이상
+                                    </Text>
+                                    <Text style={styles.subText}>
+                                        상태: {alert.enabled ? "ON" : "OFF"}
+                                    </Text>
+                                </View>
 
-                    <Text style={styles.message}>{checkResult.message}</Text>
+                                <Pressable
+                                    style={styles.secondaryButton}
+                                    onPress={() => handleCheckAlert(alert.id)}
+                                >
+                                    <Text style={styles.secondaryButtonText}>알림 판단</Text>
+                                </Pressable>
+                            </View>
+                        ))
+                    )}
                 </View>
-            )}
-        </ScrollView>
+
+                {checkResult && (
+                    <View style={styles.card}>
+                        <Text style={styles.sectionTitle}>알림 판단 결과</Text>
+
+                        <Text style={styles.value}>{checkResult.locationName}</Text>
+                        <Text style={styles.subText}>
+                            현재 UV 지수: {checkResult.currentUvValue}
+                        </Text>
+                        <Text style={styles.subText}>
+                            현재 UV 단계: {checkResult.currentUvLevel}
+                        </Text>
+                        <Text style={styles.subText}>
+                            알림 기준: {checkResult.uvThreshold} 이상
+                        </Text>
+                        <Text
+                            style={[
+                                styles.notifyResult,
+                                checkResult.shouldNotify
+                                    ? styles.notifyOn
+                                    : styles.notifyOff,
+                            ]}
+                        >
+                            {checkResult.shouldNotify ? "알림 필요" : "알림 불필요"}
+                        </Text>
+
+                        <Text style={styles.message}>{checkResult.message}</Text>
+                    </View>
+                )}
+            </ScrollView>
+        </ScreenContainer>
     );
 }
 
@@ -238,7 +241,7 @@ const styles = StyleSheet.create({
     content: {
         padding: 20,
         gap: 16,
-        paddingBottom: 32,
+        paddingBottom: 48,
     },
     title: {
         fontSize: 28,
