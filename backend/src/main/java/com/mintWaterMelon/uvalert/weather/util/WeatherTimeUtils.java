@@ -3,6 +3,8 @@ package com.mintWaterMelon.uvalert.weather.util;
 import com.mintWaterMelon.uvalert.home.dto.HomeDateType;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 
 public class WeatherTimeUtils {
@@ -27,19 +29,68 @@ public class WeatherTimeUtils {
         };
     }
 
-    public static String toShortForecastBaseDate(LocalDate today) {
-        return today.format(DATE_FORMATTER);
-    }
-
-    public static String toShortForecastBaseTime() {
-        return "0200";
+    public static String toFcstDate(LocalDate date) {
+        return date.format(DATE_FORMATTER);
     }
 
     public static String toLivingWeatherTime(LocalDate selectedDate) {
         return selectedDate.atStartOfDay().format(LIVING_WEATHER_TIME_FORMATTER);
     }
 
-    public static String toFcstDate(LocalDate selectedDate) {
-        return selectedDate.format(DATE_FORMATTER);
+    public static ShortForecastBaseTime calculateShortForecastBaseTime(
+            LocalDateTime now
+    ) {
+        LocalDate baseDate = now.toLocalDate();
+        LocalTime currentTime = now.toLocalTime();
+
+        if (currentTime.isBefore(LocalTime.of(2, 10))) {
+            return new ShortForecastBaseTime(
+                    baseDate.minusDays(1),
+                    "2300"
+            );
+        }
+
+        if (currentTime.isBefore(LocalTime.of(5, 10))) {
+            return new ShortForecastBaseTime(baseDate, "0200");
+        }
+
+        if (currentTime.isBefore(LocalTime.of(8, 10))) {
+            return new ShortForecastBaseTime(baseDate, "0500");
+        }
+
+        if (currentTime.isBefore(LocalTime.of(11, 10))) {
+            return new ShortForecastBaseTime(baseDate, "0800");
+        }
+
+        if (currentTime.isBefore(LocalTime.of(14, 10))) {
+            return new ShortForecastBaseTime(baseDate, "1100");
+        }
+
+        if (currentTime.isBefore(LocalTime.of(17, 10))) {
+            return new ShortForecastBaseTime(baseDate, "1400");
+        }
+
+        if (currentTime.isBefore(LocalTime.of(20, 10))) {
+            return new ShortForecastBaseTime(baseDate, "1700");
+        }
+
+        if (currentTime.isBefore(LocalTime.of(23, 10))) {
+            return new ShortForecastBaseTime(baseDate, "2000");
+        }
+
+        return new ShortForecastBaseTime(baseDate, "2300");
+    }
+
+    public record ShortForecastBaseTime(
+            LocalDate date,
+            String time
+    ) {
+        public String baseDate() {
+            return date.format(DATE_FORMATTER);
+        }
+
+        public String baseTime() {
+            return time;
+        }
     }
 }

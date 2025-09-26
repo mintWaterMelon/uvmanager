@@ -2,9 +2,8 @@ package com.mintWaterMelon.uvalert.home.dto;
 
 import java.time.LocalDate;
 
-public record HomeTimeSlotResponse(
+public record HomeDashboardSlot(
         LocalDate date,
-        String time,
-        boolean current
+        String time
 ) {
 }

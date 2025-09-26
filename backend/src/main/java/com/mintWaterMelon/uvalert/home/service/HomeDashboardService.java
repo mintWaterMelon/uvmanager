@@ -8,6 +8,7 @@ import com.mintWaterMelon.uvalert.weather.dto.WeatherApiItemsResponse;
 import com.mintWaterMelon.uvalert.weather.dto.WeatherHourlyIndexResponse;
 import com.mintWaterMelon.uvalert.weather.service.WeatherService;
 import com.mintWaterMelon.uvalert.weather.util.WeatherTimeUtils;
+import com.mintWaterMelon.uvalert.weather.util.WeatherTimeUtils.ShortForecastBaseTime;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -46,22 +47,18 @@ public class HomeDashboardService {
 
         validateGrid(area);
 
-        List<String> times = getTimeSlots(mode);
-        String currentSlot = findCurrentSlot(currentTime, mode);
+        List<HomeDashboardSlot> slots = getSlots(selectedDate, mode);
 
-        String shortForecastBaseDate =
-                WeatherTimeUtils.toShortForecastBaseDate(LocalDate.now());
-
-        String shortForecastBaseTime =
-                WeatherTimeUtils.toShortForecastBaseTime();
+        ShortForecastBaseTime shortForecastBaseTime =
+                WeatherTimeUtils.calculateShortForecastBaseTime(currentTime);
 
         String livingWeatherTime =
                 WeatherTimeUtils.toLivingWeatherTime(selectedDate);
 
         WeatherApiItemsResponse shortForecast =
                 weatherService.getShortForecast(
-                        shortForecastBaseDate,
-                        shortForecastBaseTime,
+                        shortForecastBaseTime.baseDate(),
+                        shortForecastBaseTime.baseTime(),
                         area.gridX(),
                         area.gridY()
                 );
@@ -79,16 +76,17 @@ public class HomeDashboardService {
                 );
 
         HomeTableResponse table = new HomeTableResponse(
-                times.stream()
-                        .map(time -> new HomeTimeSlotResponse(
-                                time,
-                                time.equals(currentSlot)
+                slots.stream()
+                        .map(slot -> new HomeTimeSlotResponse(
+                                slot.date(),
+                                slot.time(),
+                                isCurrentSlot(slot, currentTime)
                         ))
                         .toList(),
                 List.of(
-                        createWeatherRow(times, selectedDate, shortForecast),
-                        createUvIndexRow(times, uvIndex),
-                        createAirStagnationRow(times, airStagnation)
+                        createWeatherRow(slots, shortForecast),
+                        createUvIndexRow(slots, uvIndex),
+                        createAirStagnationRow(slots, airStagnation)
                 )
         );
 
@@ -122,59 +120,85 @@ public class HomeDashboardService {
         }
     }
 
-    private List<String> getTimeSlots(HomeMode mode) {
+    private List<HomeDashboardSlot> getSlots(
+            LocalDate selectedDate,
+            HomeMode mode
+    ) {
         return switch (mode) {
-            case DAY -> List.of("06:00", "09:00", "12:00", "15:00", "18:00");
-            case NIGHT -> List.of("18:00", "21:00", "00:00", "03:00", "06:00");
+            case DAY -> List.of(
+                    new HomeDashboardSlot(selectedDate, "06:00"),
+                    new HomeDashboardSlot(selectedDate, "09:00"),
+                    new HomeDashboardSlot(selectedDate, "12:00"),
+                    new HomeDashboardSlot(selectedDate, "15:00"),
+                    new HomeDashboardSlot(selectedDate, "18:00")
+            );
+            case NIGHT -> List.of(
+                    new HomeDashboardSlot(selectedDate, "18:00"),
+                    new HomeDashboardSlot(selectedDate, "21:00"),
+                    new HomeDashboardSlot(selectedDate.plusDays(1), "00:00"),
+                    new HomeDashboardSlot(selectedDate.plusDays(1), "03:00"),
+                    new HomeDashboardSlot(selectedDate.plusDays(1), "06:00")
+            );
         };
     }
 
-    private String findCurrentSlot(LocalDateTime currentTime, HomeMode mode) {
+    private boolean isCurrentSlot(
+            HomeDashboardSlot slot,
+            LocalDateTime currentTime
+    ) {
+        if (!slot.date().equals(currentTime.toLocalDate())) {
+            return false;
+        }
+
+        String currentSlotTime = calculateCurrentSlotTime(currentTime);
+
+        return slot.time().equals(currentSlotTime);
+    }
+
+    private String calculateCurrentSlotTime(LocalDateTime currentTime) {
         int hour = currentTime.getHour();
 
-        if (mode == HomeMode.DAY) {
-            if (hour < 9) {
-                return "06:00";
-            }
-            if (hour < 12) {
-                return "09:00";
-            }
-            if (hour < 15) {
-                return "12:00";
-            }
-            if (hour < 18) {
-                return "15:00";
-            }
-            return "18:00";
-        }
-
-        if (hour >= 18 && hour < 21) {
-            return "18:00";
-        }
-        if (hour >= 21) {
-            return "21:00";
-        }
         if (hour < 3) {
             return "00:00";
         }
+
         if (hour < 6) {
             return "03:00";
         }
-        return "06:00";
+
+        if (hour < 9) {
+            return "06:00";
+        }
+
+        if (hour < 12) {
+            return "09:00";
+        }
+
+        if (hour < 15) {
+            return "12:00";
+        }
+
+        if (hour < 18) {
+            return "15:00";
+        }
+
+        if (hour < 21) {
+            return "18:00";
+        }
+
+        return "21:00";
     }
 
     private HomeTableRowResponse createWeatherRow(
-            List<String> times,
-            LocalDate selectedDate,
+            List<HomeDashboardSlot> slots,
             WeatherApiItemsResponse shortForecast
     ) {
         return new HomeTableRowResponse(
                 HomeTableRowType.WEATHER,
                 "날씨 및 온도",
-                times.stream()
-                        .map(time -> createWeatherCell(
-                                time,
-                                selectedDate,
+                slots.stream()
+                        .map(slot -> createWeatherCell(
+                                slot,
                                 shortForecast.items()
                         ))
                         .toList()
@@ -182,12 +206,11 @@ public class HomeDashboardService {
     }
 
     private HomeTableCellResponse createWeatherCell(
-            String time,
-            LocalDate selectedDate,
+            HomeDashboardSlot slot,
             List<WeatherApiItem> items
     ) {
-        String fcstDate = WeatherTimeUtils.toFcstDate(selectedDate);
-        String fcstTime = time.replace(":", "");
+        String fcstDate = WeatherTimeUtils.toFcstDate(slot.date());
+        String fcstTime = slot.time().replace(":", "");
 
         Optional<String> temperature = findForecastValue(
                 items,
@@ -224,7 +247,8 @@ public class HomeDashboardService {
                 .orElse(null);
 
         return new HomeTableCellResponse(
-                time,
+                slot.date(),
+                slot.time(),
                 weatherText,
                 temperatureText,
                 temperatureValue,
@@ -266,15 +290,15 @@ public class HomeDashboardService {
     }
 
     private HomeTableRowResponse createUvIndexRow(
-            List<String> times,
+            List<HomeDashboardSlot> slots,
             WeatherHourlyIndexResponse uvIndex
     ) {
         return new HomeTableRowResponse(
                 HomeTableRowType.UV_INDEX,
                 "자외선 지수",
-                times.stream()
-                        .map(time -> createIndexCell(
-                                time,
+                slots.stream()
+                        .map(slot -> createIndexCell(
+                                slot,
                                 uvIndex.hourlyValues(),
                                 "UV"
                         ))
@@ -283,15 +307,15 @@ public class HomeDashboardService {
     }
 
     private HomeTableRowResponse createAirStagnationRow(
-            List<String> times,
+            List<HomeDashboardSlot> slots,
             WeatherHourlyIndexResponse airStagnation
     ) {
         return new HomeTableRowResponse(
                 HomeTableRowType.AIR_STAGNATION,
                 "대기정체지수",
-                times.stream()
-                        .map(time -> createIndexCell(
-                                time,
+                slots.stream()
+                        .map(slot -> createIndexCell(
+                                slot,
                                 airStagnation.hourlyValues(),
                                 "AIR"
                         ))
@@ -300,16 +324,17 @@ public class HomeDashboardService {
     }
 
     private HomeTableCellResponse createIndexCell(
-            String time,
+            HomeDashboardSlot slot,
             Map<Integer, Integer> hourlyValues,
             String type
     ) {
-        int hour = Integer.parseInt(time.substring(0, 2));
+        int hour = Integer.parseInt(slot.time().substring(0, 2));
         Integer value = hourlyValues.get(hour);
 
         if (value == null) {
             return new HomeTableCellResponse(
-                    time,
+                    slot.date(),
+                    slot.time(),
                     "-",
                     "정보 없음",
                     null,
@@ -326,7 +351,8 @@ public class HomeDashboardService {
                 : convertAirStagnationLevelText(level);
 
         return new HomeTableCellResponse(
-                time,
+                slot.date(),
+                slot.time(),
                 String.valueOf(value),
                 levelText,
                 value,
