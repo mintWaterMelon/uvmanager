@@ -22,13 +22,36 @@ public class HomeDashboardService {
 
     private final AreaService areaService;
     private final WeatherService weatherService;
+    private final HomeBackgroundService homeBackgroundService;
 
     public HomeDashboardService(
             AreaService areaService,
-            WeatherService weatherService
+            WeatherService weatherService,
+            HomeBackgroundService homeBackgroundService
     ) {
         this.areaService = areaService;
         this.weatherService = weatherService;
+        this.homeBackgroundService = homeBackgroundService;
+    }
+
+    private String findRepresentativeWeather(HomeTableRowResponse weatherRow) {
+        return weatherRow.cells()
+                .stream()
+                .filter(cell -> cell.mainText() != null)
+                .filter(cell -> !cell.mainText().isBlank())
+                .filter(cell -> !"-".equals(cell.mainText()))
+                .findFirst()
+                .map(HomeTableCellResponse::mainText)
+                .orElse("맑음");
+    }
+
+    private Integer findRepresentativeTemperature(HomeTableRowResponse weatherRow) {
+        return weatherRow.cells()
+                .stream()
+                .map(HomeTableCellResponse::value)
+                .filter(value -> value != null)
+                .findFirst()
+                .orElse(null);
     }
 
     public HomeDashboardResponse getDashboard(
@@ -75,6 +98,10 @@ public class HomeDashboardService {
                         livingWeatherTime
                 );
 
+        HomeTableRowResponse weatherRow = createWeatherRow(slots, shortForecast);
+        HomeTableRowResponse uvIndexRow = createUvIndexRow(slots, uvIndex);
+        HomeTableRowResponse airStagnationRow = createAirStagnationRow(slots, airStagnation);
+
         HomeTableResponse table = new HomeTableResponse(
                 slots.stream()
                         .map(slot -> new HomeTimeSlotResponse(
@@ -84,9 +111,9 @@ public class HomeDashboardService {
                         ))
                         .toList(),
                 List.of(
-                        createWeatherRow(slots, shortForecast),
-                        createUvIndexRow(slots, uvIndex),
-                        createAirStagnationRow(slots, airStagnation)
+                        weatherRow,
+                        uvIndexRow,
+                        airStagnationRow
                 )
         );
 
@@ -97,6 +124,16 @@ public class HomeDashboardService {
                 .max()
                 .orElse(0);
 
+        int maxAirStagnation = airStagnation.hourlyValues()
+                .values()
+                .stream()
+                .mapToInt(Integer::intValue)
+                .max()
+                .orElse(0);
+
+        String representativeWeather = findRepresentativeWeather(weatherRow);
+        Integer representativeTemperature = findRepresentativeTemperature(weatherRow);
+
         return new HomeDashboardResponse(
                 currentTime,
                 selectedDate,
@@ -106,7 +143,15 @@ public class HomeDashboardService {
                         area.areaNo(),
                         area.displayName()
                 ),
-                createBackground(mode, maxUv),
+                homeBackgroundService.decideBackground(
+                        new HomeBackgroundCondition(
+                                mode,
+                                representativeWeather,
+                                maxUv,
+                                maxAirStagnation,
+                                representativeTemperature
+                        )
+                ),
                 table,
                 createAdvice(maxUv)
         );
@@ -404,30 +449,6 @@ public class HomeDashboardService {
             case "HIGH" -> "높음";
             default -> "정보 없음";
         };
-    }
-
-    private HomeBackgroundResponse createBackground(HomeMode mode, int maxUv) {
-        if (mode == HomeMode.NIGHT) {
-            return new HomeBackgroundResponse(
-                    "NIGHT",
-                    "#111827",
-                    "밤 시간대 배경"
-            );
-        }
-
-        if (maxUv >= 8) {
-            return new HomeBackgroundResponse(
-                    "DAY_HIGH_UV",
-                    "#FFE7A3",
-                    "낮 시간대이며 자외선이 강한 상태"
-            );
-        }
-
-        return new HomeBackgroundResponse(
-                "DAY_NORMAL",
-                "#E0F2FE",
-                "낮 시간대 일반 배경"
-        );
     }
 
     private HomeAdviceResponse createAdvice(int maxUv) {
