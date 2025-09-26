@@ -5,6 +5,8 @@ public record AreaResponse(
         String level1,
         String level2,
         String level3,
-        String displayName
+        String displayName,
+        int gridX,
+        int gridY
 ) {
 }
