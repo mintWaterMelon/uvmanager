@@ -23,15 +23,18 @@ public class HomeDashboardService {
     private final AreaService areaService;
     private final WeatherService weatherService;
     private final HomeBackgroundService homeBackgroundService;
+    private final HomeAdviceService homeAdviceService;
 
     public HomeDashboardService(
             AreaService areaService,
             WeatherService weatherService,
-            HomeBackgroundService homeBackgroundService
+            HomeBackgroundService homeBackgroundService,
+            HomeAdviceService homeAdviceService
     ) {
         this.areaService = areaService;
         this.weatherService = weatherService;
         this.homeBackgroundService = homeBackgroundService;
+        this.homeAdviceService = homeAdviceService;
     }
 
     private String findRepresentativeWeather(HomeTableRowResponse weatherRow) {
@@ -153,7 +156,15 @@ public class HomeDashboardService {
                         )
                 ),
                 table,
-                createAdvice(maxUv)
+                homeAdviceService.createAdvice(
+                        new HomeAdviceCondition(
+                                mode,
+                                representativeWeather,
+                                maxUv,
+                                maxAirStagnation,
+                                representativeTemperature
+                        )
+                )
         );
     }
 
@@ -449,38 +460,6 @@ public class HomeDashboardService {
             case "HIGH" -> "높음";
             default -> "정보 없음";
         };
-    }
-
-    private HomeAdviceResponse createAdvice(int maxUv) {
-        if (maxUv >= 11) {
-            return new HomeAdviceResponse(
-                    "자외선이 매우 위험해요",
-                    "가능하면 실내에 머무르고, 외출 시 긴 옷과 모자, 선글라스를 착용하세요.",
-                    "DANGER"
-            );
-        }
-
-        if (maxUv >= 8) {
-            return new HomeAdviceResponse(
-                    "오늘은 자외선이 강해요",
-                    "외출 전 선크림을 바르고, 2~3시간마다 덧바르는 것을 추천합니다.",
-                    "WARNING"
-            );
-        }
-
-        if (maxUv >= 3) {
-            return new HomeAdviceResponse(
-                    "자외선 차단을 준비하세요",
-                    "야외 활동 시간이 길다면 선크림을 바르는 것이 좋습니다.",
-                    "INFO"
-            );
-        }
-
-        return new HomeAdviceResponse(
-                "자외선이 낮은 편이에요",
-                "일상적인 외출은 큰 부담이 적지만, 장시간 외출 시에는 기본적인 보호를 권장합니다.",
-                "NORMAL"
-        );
     }
 
     private Integer parseIntegerSafely(String value) {
