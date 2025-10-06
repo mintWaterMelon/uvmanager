@@ -1,10 +1,13 @@
 const API_BASE_URL = "http://172.30.1.47:8080";
 
 export async function apiGet<T>(path: string): Promise<T> {
-    const response = await fetch(`${API_BASE_URL}${path}`);
+    const url = `${API_BASE_URL}${path}`;
+
+    const response = await fetch(url);
 
     if (!response.ok) {
-        throw new Error(`API GET failed: ${response.status}`);
+        const text = await response.text();
+        throw new Error(`API GET failed: ${response.status} url=${url} body=${text}`);
     }
 
     return response.json();
