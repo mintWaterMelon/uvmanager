@@ -27,21 +27,21 @@ export default function TabLayout() {
             <Tabs.Screen
                 name="index"
                 options={{
-                    title: "Home",
+                    title: "☀️ 홈",
                 }}
             />
 
             <Tabs.Screen
-                name="sunscreen"
+                name="uv-info"
                 options={{
-                    title: "Sunscreen",
+                    title: "🧴 자외선",
                 }}
             />
 
             <Tabs.Screen
                 name="settings"
                 options={{
-                    title: "Settings",
+                    title: "⚙️ 설정",
                 }}
             />
         </Tabs>
