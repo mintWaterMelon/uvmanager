@@ -143,49 +143,15 @@ export default function SettingsScreen() {
             <ScrollView style={styles.container} contentContainerStyle={styles.content}>
                 <Text style={styles.title}>설정</Text>
 
-                <View style={styles.card}>
-                    <Text style={styles.sectionTitle}>기본 지역</Text>
-
-                    <Text style={styles.label}>지역 검색</Text>
-
-                    <View style={styles.searchRow}>
-                        <TextInput
-                            style={styles.input}
-                            value={keyword}
-                            onChangeText={setKeyword}
-                            placeholder="예: 서울, 종로구, 청운효자동"
-                            autoCapitalize="none"
-                        />
-
-                        <Pressable style={styles.searchButton} onPress={handleSearchArea}>
-                            <Text style={styles.searchButtonText}>검색</Text>
-                        </Pressable>
-                    </View>
-
-                    {areas.length > 0 && (
-                        <View style={styles.resultBox}>
-                            {areas.map((area) => (
-                                <Pressable
-                                    key={area.areaNo}
-                                    style={styles.resultItem}
-                                    onPress={() => handleSelectArea(area)}
-                                >
-                                    <Text style={styles.resultName}>{area.displayName}</Text>
-                                    <Text style={styles.resultCode}>{area.areaNo}</Text>
-                                    <Text style={styles.resultCode}>
-                                        격자 좌표: X {area.gridX}, Y {area.gridY}
-                                    </Text>
-                                </Pressable>
-                            ))}
-                        </View>
-                    )}
-
-                    <View style={styles.selectedBox}>
-                        <Text style={styles.label}>선택된 기본 지역</Text>
-                        <Text style={styles.value}>{defaultLocationName}</Text>
-                        <Text style={styles.subText}>지역 코드: {defaultAreaNo}</Text>
-                    </View>
-                </View>
+                <Pressable
+                    style={styles.menuCard}
+                    onPress={() => router.push("/location-settings")}
+                >
+                    <Text style={styles.menuTitle}>위치 설정</Text>
+                    <Text style={styles.menuDescription}>
+                        현재 기본 위치를 검색하고 변경합니다.
+                    </Text>
+                </Pressable>
 
                 <View style={styles.card}>
                     <Text style={styles.sectionTitle}>알림 기본값</Text>
