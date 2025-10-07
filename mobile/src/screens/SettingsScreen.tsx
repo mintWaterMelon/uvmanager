@@ -208,7 +208,10 @@ export default function SettingsScreen() {
                     </Text>
                 </Pressable>
 
-                <Pressable style={styles.menuCard}>
+                <Pressable
+                    style={styles.menuCard}
+                    onPress={() => router.push("/license")}
+                >
                     <Text style={styles.menuTitle}>라이센스</Text>
                     <Text style={styles.menuDescription}>
                         공공데이터 출처와 제3자 저작권 표시를 확인합니다.
