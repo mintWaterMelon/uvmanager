@@ -198,7 +198,10 @@ export default function SettingsScreen() {
                     </Text>
                 </Pressable>
 
-                <Pressable style={styles.menuCard}>
+                <Pressable
+                    style={styles.menuCard}
+                    onPress={() => router.push("/how-to-use")}
+                >
                     <Text style={styles.menuTitle}>사용방법</Text>
                     <Text style={styles.menuDescription}>
                         앱 사용 방법과 자외선 정보 확인 방법을 안내합니다.
