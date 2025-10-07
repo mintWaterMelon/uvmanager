@@ -9,12 +9,15 @@ import {
     TextInput,
     View,
 } from "react-native";
+import { useRouter } from "expo-router";
 
 import { AreaResponse, searchAreas } from "../api/areaApi";
 import { getSettings, updateSettings } from "../api/settingApi";
 import ScreenContainer from "../components/ScreenContainer";
 
 export default function SettingsScreen() {
+    const router = useRouter();
+
     const [defaultAreaNo, setDefaultAreaNo] = useState("1100000000");
     const [defaultLocationName, setDefaultLocationName] = useState("서울특별시");
     const [defaultUvThreshold, setDefaultUvThreshold] = useState("6");
@@ -58,8 +61,8 @@ export default function SettingsScreen() {
     async function handleSearchArea() {
         try {
             setLoading(true);
-            setErrorMessage(null);
             setMessage(null);
+            setErrorMessage(null);
 
             const result = await searchAreas(keyword);
             setAreas(result);
@@ -169,6 +172,9 @@ export default function SettingsScreen() {
                                 >
                                     <Text style={styles.resultName}>{area.displayName}</Text>
                                     <Text style={styles.resultCode}>{area.areaNo}</Text>
+                                    <Text style={styles.resultCode}>
+                                        격자 좌표: X {area.gridX}, Y {area.gridY}
+                                    </Text>
                                 </Pressable>
                             ))}
                         </View>
@@ -216,6 +222,30 @@ export default function SettingsScreen() {
                     </View>
                 </View>
 
+                <Pressable
+                    style={styles.menuCard}
+                    onPress={() => router.push("/push-settings")}
+                >
+                    <Text style={styles.menuTitle}>푸시 설정</Text>
+                    <Text style={styles.menuDescription}>
+                        자외선 알림, 미세먼지 알림, 알림 시간을 설정합니다.
+                    </Text>
+                </Pressable>
+
+                <Pressable style={styles.menuCard}>
+                    <Text style={styles.menuTitle}>사용방법</Text>
+                    <Text style={styles.menuDescription}>
+                        앱 사용 방법과 자외선 정보 확인 방법을 안내합니다.
+                    </Text>
+                </Pressable>
+
+                <Pressable style={styles.menuCard}>
+                    <Text style={styles.menuTitle}>라이센스</Text>
+                    <Text style={styles.menuDescription}>
+                        공공데이터 출처와 제3자 저작권 표시를 확인합니다.
+                    </Text>
+                </Pressable>
+
                 {loading && (
                     <View style={styles.statusBox}>
                         <ActivityIndicator size="small" />
@@ -256,7 +286,7 @@ const styles = StyleSheet.create({
     content: {
         padding: 20,
         gap: 16,
-        paddingBottom: 48,
+        paddingBottom: 56,
     },
     centerContainer: {
         flex: 1,
@@ -272,17 +302,19 @@ const styles = StyleSheet.create({
     },
     title: {
         fontSize: 28,
-        fontWeight: "800",
+        fontWeight: "900",
+        color: "#111827",
         marginBottom: 8,
     },
     card: {
         backgroundColor: "#FFFFFF",
         padding: 16,
-        borderRadius: 16,
+        borderRadius: 18,
     },
     sectionTitle: {
         fontSize: 18,
-        fontWeight: "800",
+        fontWeight: "900",
+        color: "#111827",
         marginBottom: 12,
     },
     label: {
@@ -293,7 +325,8 @@ const styles = StyleSheet.create({
     },
     value: {
         fontSize: 20,
-        fontWeight: "700",
+        fontWeight: "800",
+        color: "#111827",
     },
     subText: {
         marginTop: 4,
@@ -322,7 +355,7 @@ const styles = StyleSheet.create({
     },
     searchButtonText: {
         color: "#FFFFFF",
-        fontWeight: "700",
+        fontWeight: "800",
     },
     resultBox: {
         marginTop: 12,
@@ -336,7 +369,8 @@ const styles = StyleSheet.create({
     },
     resultName: {
         fontSize: 16,
-        fontWeight: "700",
+        fontWeight: "800",
+        color: "#111827",
     },
     resultCode: {
         marginTop: 4,
@@ -356,6 +390,22 @@ const styles = StyleSheet.create({
         justifyContent: "space-between",
         alignItems: "center",
     },
+    menuCard: {
+        backgroundColor: "#FFFFFF",
+        padding: 16,
+        borderRadius: 18,
+    },
+    menuTitle: {
+        fontSize: 18,
+        fontWeight: "900",
+        color: "#111827",
+    },
+    menuDescription: {
+        marginTop: 6,
+        fontSize: 13,
+        lineHeight: 19,
+        color: "#6B7280",
+    },
     statusBox: {
         backgroundColor: "#FFFFFF",
         padding: 12,
@@ -371,12 +421,12 @@ const styles = StyleSheet.create({
     successText: {
         color: "#059669",
         fontSize: 14,
-        fontWeight: "700",
+        fontWeight: "800",
     },
     errorText: {
         color: "#DC2626",
         fontSize: 14,
-        fontWeight: "700",
+        fontWeight: "800",
     },
     saveButton: {
         backgroundColor: "#2563EB",
@@ -390,6 +440,6 @@ const styles = StyleSheet.create({
     saveButtonText: {
         color: "#FFFFFF",
         fontSize: 16,
-        fontWeight: "800",
+        fontWeight: "900",
     },
 });

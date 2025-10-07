@@ -6,6 +6,8 @@ export type AreaResponse = {
     level2: string;
     level3: string;
     displayName: string;
+    gridX: number;
+    gridY: number;
 };
 
 export function searchAreas(keyword?: string) {
