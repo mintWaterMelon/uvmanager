@@ -7,7 +7,7 @@ import {
     Text,
     View,
 } from "react-native";
-import { useFocusEffect } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 
 import {
     getHomeDashboard,
@@ -21,6 +21,8 @@ import { getSettings } from "../api/settingApi";
 import ScreenContainer from "../components/ScreenContainer";
 
 export default function HomeScreen() {
+    const router = useRouter();
+
     const [dashboard, setDashboard] = useState<HomeDashboardResponse | null>(null);
     const [dateType, setDateType] = useState<HomeDateType>("TODAY");
     const [mode, setMode] = useState<HomeMode>("DAY");
@@ -114,11 +116,14 @@ export default function HomeScreen() {
                     </Pressable>
                 </View>
 
-                <Pressable style={styles.locationCard}>
+                <Pressable
+                    style={styles.locationCard}
+                    onPress={() => router.push("/location-settings")}
+                >
                     <Text style={styles.label}>현재 위치</Text>
                     <Text style={styles.locationName}>{dashboard.location.name}</Text>
                     <Text style={styles.subText}>지역 코드: {dashboard.location.areaNo}</Text>
-                    <Text style={styles.linkText}>위치 설정 화면으로 이동 예정</Text>
+                    <Text style={styles.linkText}>눌러서 위치 변경하기</Text>
                 </Pressable>
 
                 <View style={styles.controlCard}>
