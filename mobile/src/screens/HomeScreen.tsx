@@ -126,33 +126,49 @@ export default function HomeScreen() {
                     <Text style={styles.linkText}>눌러서 위치 변경하기</Text>
                 </Pressable>
 
-                <View style={styles.controlCard}>
+                <View style={styles.selectorCard}>
+                    <Text style={styles.selectorTitle}>날짜 선택</Text>
+
                     <View style={styles.dateButtonRow}>
                         <DateButton
                             label="오늘"
+                            emoji="📍"
                             active={dateType === "TODAY"}
                             onPress={() => handleChangeDateType("TODAY")}
                         />
                         <DateButton
                             label="내일"
+                            emoji="➡️"
                             active={dateType === "TOMORROW"}
                             onPress={() => handleChangeDateType("TOMORROW")}
                         />
                         <DateButton
                             label="모레"
+                            emoji="⏭️"
                             active={dateType === "DAY_AFTER_TOMORROW"}
                             onPress={() => handleChangeDateType("DAY_AFTER_TOMORROW")}
                         />
                     </View>
 
-                    <View style={styles.modeRow}>
-                        <Text style={styles.modeText}>
-                            {mode === "DAY" ? "☀️ 낮 모드" : "🌙 밤 모드"}
-                        </Text>
+                    <View style={styles.modeSelectorBox}>
+                        <View>
+                            <Text style={styles.selectorTitle}>시간대 선택</Text>
+                            <Text style={styles.selectorDescription}>
+                                {mode === "DAY"
+                                    ? "06시부터 18시까지의 낮 정보를 보여줍니다."
+                                    : "18시부터 다음날 06시까지의 밤 정보를 보여줍니다."}
+                            </Text>
+                        </View>
 
-                        <Pressable style={styles.modeButton} onPress={handleToggleMode}>
-                            <Text style={styles.modeButtonText}>
-                                {mode === "DAY" ? "밤 보기" : "낮 보기"}
+                        <Pressable
+                            style={[
+                                styles.modeToggleButton,
+                                mode === "NIGHT" && styles.modeToggleButtonNight,
+                            ]}
+                            onPress={handleToggleMode}
+                        >
+                            <Text style={styles.modeToggleText}>
+                                {mode === "DAY" ? "☀️ 낮" : "🌙 밤"}
                             </Text>
                         </Pressable>
                     </View>
@@ -187,10 +203,12 @@ export default function HomeScreen() {
 
 function DateButton({
     label,
+    emoji,
     active,
     onPress,
 }: {
     label: string;
+    emoji: string;
     active: boolean;
     onPress: () => void;
 }) {
@@ -199,6 +217,7 @@ function DateButton({
             style={[styles.dateButton, active && styles.dateButtonActive]}
             onPress={onPress}
         >
+            <Text style={styles.dateButtonEmoji}>{emoji}</Text>
             <Text
                 style={[
                     styles.dateButtonText,
@@ -451,12 +470,6 @@ const styles = StyleSheet.create({
         color: "#2563EB",
         fontWeight: "700",
     },
-    controlCard: {
-        backgroundColor: "rgba(255, 255, 255, 0.92)",
-        padding: 14,
-        borderRadius: 18,
-        gap: 12,
-    },
     dateButtonRow: {
         flexDirection: "row",
         gap: 8,
@@ -478,26 +491,73 @@ const styles = StyleSheet.create({
     dateButtonTextActive: {
         color: "#FFFFFF",
     },
-    modeRow: {
-        flexDirection: "row",
-        justifyContent: "space-between",
-        alignItems: "center",
+    selectorCard: {
+        backgroundColor: "rgba(255, 255, 255, 0.92)",
+        padding: 14,
+        borderRadius: 18,
+        gap: 14,
     },
-    modeText: {
-        fontSize: 16,
+    selectorTitle: {
+        fontSize: 15,
         fontWeight: "900",
         color: "#111827",
     },
-    modeButton: {
-        backgroundColor: "#111827",
-        paddingVertical: 8,
-        paddingHorizontal: 12,
-        borderRadius: 10,
-    },
-    modeButtonText: {
-        color: "#FFFFFF",
+    selectorDescription: {
+        marginTop: 4,
         fontSize: 12,
-        fontWeight: "800",
+        lineHeight: 18,
+        color: "#6B7280",
+    },
+    dateButtonRow: {
+        flexDirection: "row",
+        gap: 8,
+    },
+    dateButton: {
+        flex: 1,
+        paddingVertical: 12,
+        borderRadius: 14,
+        backgroundColor: "#F3F4F6",
+        alignItems: "center",
+        gap: 4,
+    },
+    dateButtonActive: {
+        backgroundColor: "#2563EB",
+    },
+    dateButtonEmoji: {
+        fontSize: 18,
+    },
+    dateButtonText: {
+        color: "#374151",
+        fontWeight: "900",
+        fontSize: 13,
+    },
+    dateButtonTextActive: {
+        color: "#FFFFFF",
+    },
+    modeSelectorBox: {
+        paddingTop: 12,
+        borderTopWidth: 1,
+        borderTopColor: "#E5E7EB",
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
+        gap: 12,
+    },
+    modeToggleButton: {
+        minWidth: 84,
+        backgroundColor: "#FBBF24",
+        paddingVertical: 11,
+        paddingHorizontal: 14,
+        borderRadius: 999,
+        alignItems: "center",
+    },
+    modeToggleButtonNight: {
+        backgroundColor: "#111827",
+    },
+    modeToggleText: {
+        color: "#FFFFFF",
+        fontSize: 14,
+        fontWeight: "900",
     },
     tableCard: {
         backgroundColor: "rgba(255, 255, 255, 0.94)",
