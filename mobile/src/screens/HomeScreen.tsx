@@ -476,17 +476,22 @@ const styles = StyleSheet.create({
     },
     dateButton: {
         flex: 1,
-        paddingVertical: 10,
-        borderRadius: 12,
+        paddingVertical: 12,
+        borderRadius: 14,
         backgroundColor: "#F3F4F6",
         alignItems: "center",
+        gap: 4,
     },
     dateButtonActive: {
         backgroundColor: "#2563EB",
     },
+    dateButtonEmoji: {
+        fontSize: 18,
+    },
     dateButtonText: {
         color: "#374151",
-        fontWeight: "800",
+        fontWeight: "900",
+        fontSize: 13,
     },
     dateButtonTextActive: {
         color: "#FFFFFF",
@@ -507,32 +512,6 @@ const styles = StyleSheet.create({
         fontSize: 12,
         lineHeight: 18,
         color: "#6B7280",
-    },
-    dateButtonRow: {
-        flexDirection: "row",
-        gap: 8,
-    },
-    dateButton: {
-        flex: 1,
-        paddingVertical: 12,
-        borderRadius: 14,
-        backgroundColor: "#F3F4F6",
-        alignItems: "center",
-        gap: 4,
-    },
-    dateButtonActive: {
-        backgroundColor: "#2563EB",
-    },
-    dateButtonEmoji: {
-        fontSize: 18,
-    },
-    dateButtonText: {
-        color: "#374151",
-        fontWeight: "900",
-        fontSize: 13,
-    },
-    dateButtonTextActive: {
-        color: "#FFFFFF",
     },
     modeSelectorBox: {
         paddingTop: 12,
