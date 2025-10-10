@@ -236,35 +236,38 @@ function DashboardTable({
     dashboard: HomeDashboardResponse;
 }) {
     return (
-        <View style={styles.table}>
-            <View style={styles.tableRow}>
-                <View style={[styles.rowHeaderCell, styles.headerCell]}>
-                    <Text style={styles.headerText}>구분</Text>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            <View style={styles.table}>
+                <View style={styles.tableRow}>
+                    <View style={[styles.rowHeaderCell, styles.headerCell]}>
+                        <Text style={styles.headerText}>구분</Text>
+                    </View>
+
+                    {dashboard.table.timeSlots.map((slot) => (
+                        <View
+                            key={`${slot.date}-${slot.time}`}
+                            style={[
+                                styles.timeHeaderCell,
+                                styles.headerCell,
+                                slot.current && styles.currentColumnHeader,
+                            ]}
+                        >
+                            <Text style={styles.headerText}>{slot.time}</Text>
+                            <Text style={styles.dateText}>{formatShortDate(slot.date)}</Text>
+                            {slot.current && <Text style={styles.currentBadge}>현재</Text>}
+                        </View>
+                    ))}
                 </View>
 
-                {dashboard.table.timeSlots.map((slot) => (
-                    <View
-                        key={`${slot.date}-${slot.time}`}
-                        style={[
-                            styles.timeHeaderCell,
-                            styles.headerCell,
-                            slot.current && styles.currentColumn,
-                        ]}
-                    >
-                        <Text style={styles.headerText}>{slot.time}</Text>
-                        <Text style={styles.dateText}>{formatShortDate(slot.date)}</Text>
-                    </View>
+                {dashboard.table.rows.map((row) => (
+                    <DashboardTableRow
+                        key={row.type}
+                        row={row}
+                        currentTimes={dashboard.table.timeSlots}
+                    />
                 ))}
             </View>
-
-            {dashboard.table.rows.map((row) => (
-                <DashboardTableRow
-                    key={row.type}
-                    row={row}
-                    currentTimes={dashboard.table.timeSlots}
-                />
-            ))}
-        </View>
+        </ScrollView>
     );
 }
 
@@ -308,25 +311,95 @@ function DashboardTableCell({
     cell: HomeTableCell;
     current: boolean;
 }) {
+    const shouldShowLevel =
+        cell.level !== "UNKNOWN" &&
+        cell.level !== "맑음" &&
+        cell.level !== "구름많음" &&
+        cell.level !== "흐림" &&
+        cell.level !== "비" &&
+        cell.level !== "비/눈" &&
+        cell.level !== "눈" &&
+        cell.level !== "소나기" &&
+        cell.level !== "강수";
+
     return (
-        <View style={[styles.dataCell, current && styles.currentColumn]}>
-            <Text style={styles.cellMainText}>{cell.mainText}</Text>
+        <View style={[styles.dataCell, current && styles.currentColumnCell]}>
+            <Text style={styles.cellMainText}>{formatCellMainText(cell)}</Text>
             <Text style={styles.cellSubText}>{cell.subText}</Text>
+
+            {shouldShowLevel && (
+                <Text style={styles.cellLevelText}>{formatLevelText(cell.level)}</Text>
+            )}
         </View>
     );
 }
 
+function formatCellMainText(cell: HomeTableCell) {
+    if (cell.mainText === "맑음") {
+        return "☀️";
+    }
+
+    if (cell.mainText === "구름많음") {
+        return "⛅";
+    }
+
+    if (cell.mainText === "흐림") {
+        return "☁️";
+    }
+
+    if (cell.mainText === "비") {
+        return "🌧️";
+    }
+
+    if (cell.mainText === "비/눈") {
+        return "🌨️";
+    }
+
+    if (cell.mainText === "눈") {
+        return "❄️";
+    }
+
+    if (cell.mainText === "소나기") {
+        return "🌦️";
+    }
+
+    if (cell.mainText === "강수") {
+        return "🌧️";
+    }
+
+    return cell.mainText;
+}
+
+function formatLevelText(level: string) {
+    switch (level) {
+        case "LOW":
+            return "낮음";
+        case "MODERATE":
+            return "보통";
+        case "HIGH":
+            return "높음";
+        case "VERY_HIGH":
+            return "매우 높음";
+        case "EXTREME":
+            return "위험";
+        case "SUNNY":
+            return "맑음";
+        default:
+            return "";
+    }
+}
+
 function convertRowLabel(label: string) {
     if (label === "날씨 및 온도") {
-        return "날씨\n온도";
+        return "🌤️\n날씨\n온도";
     }
 
     if (label === "자외선 지수") {
-        return "자외선";
+        return "☀️\n자외선";
     }
 
     if (label === "대기정체지수") {
-        return "대기\n정체";
+        return "🌫️\n미세\n먼지";
     }
 
     return label;
@@ -539,8 +612,8 @@ const styles = StyleSheet.create({
         fontWeight: "900",
     },
     tableCard: {
-        backgroundColor: "rgba(255, 255, 255, 0.94)",
-        padding: 14,
+        backgroundColor: "rgba(255, 255, 255, 0.82)",
+        padding: 12,
         borderRadius: 18,
     },
     sectionTitle: {
@@ -555,55 +628,51 @@ const styles = StyleSheet.create({
         color: "#6B7280",
     },
     table: {
-        borderWidth: 1,
-        borderColor: "#E5E7EB",
         borderRadius: 14,
         overflow: "hidden",
+        backgroundColor: "rgba(255, 255, 255, 0.72)",
     },
     tableRow: {
         flexDirection: "row",
     },
     headerCell: {
-        backgroundColor: "#F9FAFB",
+        backgroundColor: "rgba(255, 255, 255, 0.65)",
     },
     rowHeaderCell: {
-        width: 58,
-        minHeight: 64,
-        padding: 6,
+        width: 62,
+        minHeight: 52,
+        padding: 4,
         justifyContent: "center",
         alignItems: "center",
-        borderRightWidth: 1,
-        borderRightColor: "#E5E7EB",
-        borderBottomWidth: 1,
-        borderBottomColor: "#E5E7EB",
-        backgroundColor: "#F9FAFB",
+        backgroundColor: "rgba(255, 255, 255, 0.65)",
     },
     timeHeaderCell: {
-        flex: 1,
-        minHeight: 64,
-        padding: 6,
+        width: 64,
+        minHeight: 52,
+        padding: 4,
         justifyContent: "center",
         alignItems: "center",
-        borderRightWidth: 1,
-        borderRightColor: "#E5E7EB",
-        borderBottomWidth: 1,
-        borderBottomColor: "#E5E7EB",
+        backgroundColor: "rgba(255, 255, 255, 0.65)",
     },
     dataCell: {
-        flex: 1,
-        minHeight: 64,
-        padding: 6,
+        width: 64,
+        minHeight: 58,
+        padding: 4,
         justifyContent: "center",
         alignItems: "center",
-        borderRightWidth: 1,
-        borderRightColor: "#E5E7EB",
-        borderBottomWidth: 1,
-        borderBottomColor: "#E5E7EB",
-        backgroundColor: "#FFFFFF",
+        backgroundColor: "rgba(255, 255, 255, 0.58)",
     },
-    currentColumn: {
+    currentColumnHeader: {
+        backgroundColor: "rgba(219, 234, 254, 0.95)",
         borderWidth: 2,
-        borderColor: "#111827",
+        borderColor: "#2563EB",
+        borderRadius: 10,
+    },
+    currentColumnCell: {
+        backgroundColor: "rgba(239, 246, 255, 0.95)",
+        borderWidth: 2,
+        borderColor: "#2563EB",
+        borderRadius: 10,
     },
     headerText: {
         fontSize: 12,
@@ -611,26 +680,44 @@ const styles = StyleSheet.create({
         color: "#111827",
     },
     dateText: {
-        marginTop: 2,
-        fontSize: 10,
+        marginTop: 1,
+        fontSize: 9,
         color: "#6B7280",
     },
+    currentBadge: {
+        marginTop: 3,
+        paddingHorizontal: 5,
+        paddingVertical: 1,
+        borderRadius: 999,
+        backgroundColor: "#2563EB",
+        color: "#FFFFFF",
+        fontSize: 9,
+        fontWeight: "900",
+        overflow: "hidden",
+    },
     rowHeaderText: {
-        fontSize: 12,
+        fontSize: 11,
         fontWeight: "900",
         color: "#111827",
         textAlign: "center",
+        lineHeight: 15,
     },
     cellMainText: {
-        fontSize: 14,
+        fontSize: 18,
         fontWeight: "900",
         color: "#111827",
         textAlign: "center",
     },
     cellSubText: {
-        marginTop: 4,
-        fontSize: 11,
+        marginTop: 2,
+        fontSize: 10,
         color: "#6B7280",
+        textAlign: "center",
+    },
+    cellLevelText: {
+        marginTop: 1,
+        fontSize: 9,
+        color: "#9CA3AF",
         textAlign: "center",
     },
     adviceCard: {
