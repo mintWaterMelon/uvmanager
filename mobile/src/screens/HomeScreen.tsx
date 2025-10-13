@@ -94,6 +94,12 @@ export default function HomeScreen() {
         );
     }
 
+    const theme = dashboard.background.theme;
+    const textColor = getThemeTextColor(theme);
+    const subTextColor = getThemeSubTextColor(theme);
+    const cardBackgroundColor = getCardBackgroundColor(theme);
+    const softCardBackgroundColor = getSoftCardBackgroundColor(theme);
+
     return (
         <ScreenContainer style={{ backgroundColor: dashboard.background.color }}>
             <ScrollView
@@ -105,8 +111,8 @@ export default function HomeScreen() {
             >
                 <View style={styles.headerRow}>
                     <View>
-                        <Text style={styles.title}>UV Alert</Text>
-                        <Text style={styles.headerSubText}>
+                        <Text style={[styles.title, { color: textColor }]}>UV Alert</Text>
+                        <Text style={[styles.headerSubText, { color: subTextColor }]}>
                             {formatDateTime(dashboard.currentTime)}
                         </Text>
                     </View>
@@ -117,17 +123,21 @@ export default function HomeScreen() {
                 </View>
 
                 <Pressable
-                    style={styles.locationCard}
+                    style={[styles.locationCard, { backgroundColor: cardBackgroundColor }]}
                     onPress={() => router.push("/location-settings")}
                 >
-                    <Text style={styles.label}>현재 위치</Text>
-                    <Text style={styles.locationName}>{dashboard.location.name}</Text>
-                    <Text style={styles.subText}>지역 코드: {dashboard.location.areaNo}</Text>
+                    <Text style={[styles.label, { color: subTextColor }]}>현재 위치</Text>
+                    <Text style={[styles.locationName, { color: textColor }]}>
+                        {dashboard.location.name}
+                    </Text>
+                    <Text style={[styles.subText, { color: subTextColor }]}>
+                        지역 코드: {dashboard.location.areaNo}
+                    </Text>
                     <Text style={styles.linkText}>눌러서 위치 변경하기</Text>
                 </Pressable>
 
-                <View style={styles.selectorCard}>
-                    <Text style={styles.selectorTitle}>날짜 선택</Text>
+                <View style={[styles.selectorCard, { backgroundColor: cardBackgroundColor }]}>
+                    <Text style={[styles.selectorTitle, { color: textColor }]}>날짜 선택</Text>
 
                     <View style={styles.dateButtonRow}>
                         <DateButton
@@ -152,8 +162,8 @@ export default function HomeScreen() {
 
                     <View style={styles.modeSelectorBox}>
                         <View>
-                            <Text style={styles.selectorTitle}>시간대 선택</Text>
-                            <Text style={styles.selectorDescription}>
+                            <Text style={[styles.selectorTitle, { color: textColor }]}>시간대 선택</Text>
+                            <Text style={[styles.selectorDescription, { color: subTextColor }]}>
                                 {mode === "DAY"
                                     ? "06시부터 18시까지의 낮 정보를 보여줍니다."
                                     : "18시부터 다음날 06시까지의 밤 정보를 보여줍니다."}
@@ -174,27 +184,35 @@ export default function HomeScreen() {
                     </View>
                 </View>
 
-                <View style={styles.tableCard}>
-                    <Text style={styles.sectionTitle}>시간대별 정보</Text>
-                    <Text style={styles.tableHint}>
+                <View style={[styles.tableCard, { backgroundColor: cardBackgroundColor }]}>
+                    <Text style={[styles.sectionTitle, { color: textColor }]}>시간대별 정보</Text>
+                    <Text style={[styles.tableHint, { color: subTextColor }]}>
                         현재 시간대는 굵은 테두리로 표시됩니다.
                     </Text>
 
                     <DashboardTable dashboard={dashboard} />
                 </View>
 
-                <View style={styles.adviceCard}>
+                <View style={[styles.adviceCard, { backgroundColor: cardBackgroundColor }]}>
                     <Text style={styles.adviceBadge}>
                         {convertSeverityText(dashboard.advice.severity)}
                     </Text>
-                    <Text style={styles.adviceTitle}>{dashboard.advice.title}</Text>
-                    <Text style={styles.adviceMessage}>{dashboard.advice.message}</Text>
+                    <Text style={[styles.adviceTitle, { color: textColor }]}>
+                        {dashboard.advice.title}
+                    </Text>
+                    <Text style={[styles.adviceMessage, { color: subTextColor }]}>
+                        {dashboard.advice.message}
+                    </Text>
                 </View>
 
-                <View style={styles.backgroundCard}>
-                    <Text style={styles.label}>배경 테마</Text>
-                    <Text style={styles.value}>{dashboard.background.theme}</Text>
-                    <Text style={styles.subText}>{dashboard.background.description}</Text>
+                <View style={[styles.backgroundCard, { backgroundColor: softCardBackgroundColor }]}>
+                    <Text style={[styles.label, { color: subTextColor }]}>배경 테마</Text>
+                    <Text style={[styles.value, { color: textColor }]}>
+                        {dashboard.background.theme}
+                    </Text>
+                    <Text style={[styles.subText, { color: subTextColor }]}>
+                        {dashboard.background.description}
+                    </Text>
                 </View>
             </ScrollView>
         </ScreenContainer>
@@ -449,6 +467,38 @@ function formatShortDate(value: string) {
     });
 }
 
+function getThemeTextColor(theme: string) {
+    if (theme === "NIGHT") {
+        return "#F9FAFB";
+    }
+
+    return "#111827";
+}
+
+function getThemeSubTextColor(theme: string) {
+    if (theme === "NIGHT") {
+        return "#D1D5DB";
+    }
+
+    return "#374151";
+}
+
+function getCardBackgroundColor(theme: string) {
+    if (theme === "NIGHT") {
+        return "rgba(31, 41, 55, 0.92)";
+    }
+
+    return "rgba(255, 255, 255, 0.9)";
+}
+
+function getSoftCardBackgroundColor(theme: string) {
+    if (theme === "NIGHT") {
+        return "rgba(17, 24, 39, 0.88)";
+    }
+
+    return "rgba(255, 255, 255, 0.82)";
+}
+
 const styles = StyleSheet.create({
     container: {
         flex: 1,
@@ -518,7 +568,6 @@ const styles = StyleSheet.create({
         fontWeight: "800",
     },
     locationCard: {
-        backgroundColor: "rgba(255, 255, 255, 0.92)",
         padding: 16,
         borderRadius: 18,
     },
@@ -570,7 +619,6 @@ const styles = StyleSheet.create({
         color: "#FFFFFF",
     },
     selectorCard: {
-        backgroundColor: "rgba(255, 255, 255, 0.92)",
         padding: 14,
         borderRadius: 18,
         gap: 14,
@@ -612,7 +660,6 @@ const styles = StyleSheet.create({
         fontWeight: "900",
     },
     tableCard: {
-        backgroundColor: "rgba(255, 255, 255, 0.82)",
         padding: 12,
         borderRadius: 18,
     },
@@ -721,7 +768,6 @@ const styles = StyleSheet.create({
         textAlign: "center",
     },
     adviceCard: {
-        backgroundColor: "rgba(255, 255, 255, 0.95)",
         padding: 18,
         borderRadius: 18,
     },
@@ -749,7 +795,6 @@ const styles = StyleSheet.create({
         color: "#374151",
     },
     backgroundCard: {
-        backgroundColor: "rgba(255, 255, 255, 0.88)",
         padding: 16,
         borderRadius: 18,
     },
