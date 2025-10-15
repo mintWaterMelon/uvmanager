@@ -1,57 +1,72 @@
-# UV Alert - UV 지수 알림 백엔드
+# UV Alert
+
+UV Alert는 기상청 공공데이터를 활용하여 사용자의 위치를 기준으로 날씨, 온도, 자외선지수, 미세먼지 관련 정보를 확인할 수 있는 모바일 앱 프로젝트입니다.
+
+백엔드는 Java Spring Boot로 구현하고, 모바일 앱은 Expo React Native로 구현합니다.
+
+---
 
 ## 1. Project Introduction
 
-**UV Alert**는 공공 데이터를 활용하여 사용자의 지역별 자외선 지수(UV Index)를 확인하고, 설정한 기준 이상일 경우 알림을 제공하는 백엔드 애플리케이션입니다.
+이 프로젝트는 사용자가 설정한 지역의 시간대별 날씨 정보와 자외선 정보를 제공하는 앱입니다.
 
-이 프로젝트는 Java와 Spring Boot를 사용하여 백엔드 개발의 핵심 개념을 단계별로 학습하고 구현하기 위한 포트폴리오 프로젝트입니다.
+홈 화면에서는 오늘, 내일, 모레의 정보를 낮/밤 모드로 확인할 수 있습니다.
 
-주요 목표는 다음과 같습니다.
-
-- Spring Boot 기반 REST API 서버 구현
-- 공공 API 연동
-- 사용자별 지역 및 알림 설정 관리
-- 스케줄링을 통한 정기적인 UV 지수 확인
-- 테스트, 문서화, 배포까지 포함한 백엔드 프로젝트 완성
+주요 데이터는 기상청 공공데이터 API를 통해 조회합니다.
 
 ---
 
 ## 2. Main Features
 
-현재 구현 예정인 주요 기능은 다음과 같습니다.
+### Home
 
-### 기본 기능
+- 현재 시간 표시
+- 현재 설정 위치 표시
+- 오늘 / 내일 / 모레 선택
+- 낮 / 밤 모드 전환
+- 시간대별 대시보드 표시
+  - 날씨 및 온도
+  - 자외선 지수
+  - 미세먼지 표시
+- 현재 시간대 강조
+- 날씨, 자외선, 대기 상태에 따른 배경 테마 변경
+- 상황별 조언 박스 표시
 
-- 서버 상태 확인 API
-- 지역별 UV 지수 조회 API
-- 공공 UV 지수 API 연동
-- UV 지수 등급 분류
+### UV Information
 
-### 사용자 기능
+- SPF와 PA 설명
+- 자외선지수 단계 설명
+- 올바른 선크림 사용법 안내
+- 자외선 보호 체크리스트 제공
 
-- 회원가입
-- 로그인
-- JWT 기반 인증
-- 사용자 정보 관리
+### Settings
 
-### 알림 기능
+- 위치 설정
+- 푸시 설정
+- 사용방법
+- 라이센스 정보
 
-- 사용자별 알림 지역 설정
-- 사용자별 UV 지수 알림 기준값 설정
-- 알림 활성화 / 비활성화
-- 매일 정해진 시간에 UV 지수 확인
-- 기준값 이상일 경우 알림 발송
+### Location Settings
 
-### 향후 기능
+- 지역명 검색
+- 행정구역 코드 검색
+- 선택한 지역을 기본 위치로 저장
+- 단기예보 격자 좌표 사용
 
-- 이메일 알림
-- Firebase Push Notification
-- Redis 캐싱
-- 관리자용 모니터링 API
+### Push Settings
+
+- 자외선 알림 ON/OFF
+- 자외선 알림 기준값 설정
+- 미세먼지 알림 ON/OFF
+- 알림 시간 설정
+
+> 실제 푸시 발송 기능은 TBD입니다.
 
 ---
 
 ## 3. Technology Stack
+
+### Backend
 
 | Category | Technology |
 |---|---|
@@ -64,10 +79,23 @@
 | ORM | Spring Data JPA 예정 |
 | Authentication | Spring Security + JWT 예정 |
 | API Documentation | Swagger / OpenAPI 예정 |
-| External API | 기상청 또는 공공데이터포털 UV 지수 API 예정 |
 | Test | JUnit 5, Mockito 예정 |
 | Deployment | TBD |
 | CI/CD | GitHub Actions 예정 |
+
+### Mobile
+
+- Expo
+- React Native
+- TypeScript
+- Expo Router
+- React Native Safe Area Context
+
+### External API
+
+- 기상청 자외선지수 API
+- 기상청 단기예보 조회서비스
+- 기상청 대기정체지수 API
 
 ---
 
