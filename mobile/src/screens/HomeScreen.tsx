@@ -19,6 +19,7 @@ import {
 } from "../api/homeApi";
 import { getSettings } from "../api/settingApi";
 import ScreenContainer from "../components/ScreenContainer";
+import { getApiErrorMessage, logApiError } from "../api/apiErrorMessage";
 
 export default function HomeScreen() {
     const router = useRouter();
@@ -51,8 +52,8 @@ export default function HomeScreen() {
 
             setDashboard(data);
         } catch (error) {
-            console.error(error);
-            setErrorMessage("홈 화면 데이터를 불러오지 못했습니다.");
+            logApiError(error);
+            setErrorMessage(getApiErrorMessage(error));
         } finally {
             setLoading(false);
         }

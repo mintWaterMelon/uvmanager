@@ -15,6 +15,7 @@ import {
     updatePushSettings,
 } from "../api/pushSettingApi";
 import ScreenContainer from "../components/ScreenContainer";
+import { getApiErrorMessage, logApiError } from "../api/apiErrorMessage";
 
 export default function PushSettingScreen() {
     const [uvAlertEnabled, setUvAlertEnabled] = useState(true);
@@ -44,8 +45,8 @@ export default function PushSettingScreen() {
             setDustAlertEnabled(settings.dustAlertEnabled);
             setAlertTime(formatTime(settings.alertTime));
         } catch (error) {
-            console.error(error);
-            setErrorMessage("푸시 설정을 불러오지 못했습니다.");
+            logApiError(error);
+            setErrorMessage(getApiErrorMessage(error));
         } finally {
             setLoading(false);
         }
@@ -88,8 +89,8 @@ export default function PushSettingScreen() {
 
             setMessage("푸시 설정이 저장되었습니다.");
         } catch (error) {
-            console.error(error);
-            setErrorMessage("푸시 설정 저장에 실패했습니다.");
+            logApiError(error);
+            setErrorMessage(getApiErrorMessage(error));
         } finally {
             setSaving(false);
         }

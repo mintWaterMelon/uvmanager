@@ -13,6 +13,7 @@ import { useRouter } from "expo-router";
 import { AreaResponse, searchAreas } from "../api/areaApi";
 import { getSettings, updateSettings } from "../api/settingApi";
 import ScreenContainer from "../components/ScreenContainer";
+import { getApiErrorMessage, logApiError } from "../api/apiErrorMessage";
 
 export default function LocationSettingScreen() {
     const router = useRouter();
@@ -51,8 +52,8 @@ export default function LocationSettingScreen() {
             setDefaultAlertTime(formatTime(settings.defaultAlertTime));
             setKeyword(settings.defaultLocationName);
         } catch (error) {
-            console.error(error);
-            setErrorMessage("위치 설정을 불러오지 못했습니다.");
+            logApiError(error);
+            setErrorMessage(getApiErrorMessage(error));
         } finally {
             setLoading(false);
         }
@@ -67,8 +68,8 @@ export default function LocationSettingScreen() {
             const result = await searchAreas(keyword);
             setAreas(result);
         } catch (error) {
-            console.error(error);
-            setErrorMessage("지역 정보를 불러오지 못했습니다.");
+            logApiError(error);
+            setErrorMessage(getApiErrorMessage(error));
         } finally {
             setSearching(false);
         }
@@ -94,8 +95,8 @@ export default function LocationSettingScreen() {
 
             setMessage("기본 위치가 저장되었습니다.");
         } catch (error) {
-            console.error(error);
-            setErrorMessage("기본 위치 저장에 실패했습니다.");
+            logApiError(error);
+            setErrorMessage(getApiErrorMessage(error));
         } finally {
             setSavingAreaNo(null);
         }
