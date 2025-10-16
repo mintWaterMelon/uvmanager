@@ -3,10 +3,12 @@ import {
     ActivityIndicator,
     Pressable,
     ScrollView,
+    RefreshControl,
     StyleSheet,
     Text,
     View,
 } from "react-native";
+import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { useFocusEffect, useRouter } from "expo-router";
 
 import {
@@ -22,8 +24,10 @@ import ScreenContainer from "../components/ScreenContainer";
 import { getApiErrorMessage, logApiError } from "../api/apiErrorMessage";
 
 export default function HomeScreen() {
+    //페이지 이동 제어 router 객체 생성
     const router = useRouter();
 
+    //대쉬보드 데이터
     const [dashboard, setDashboard] = useState<HomeDashboardResponse | null>(null);
     const [dateType, setDateType] = useState<HomeDateType>("TODAY");
     const [mode, setMode] = useState<HomeMode>("DAY");
@@ -31,6 +35,7 @@ export default function HomeScreen() {
     const [loading, setLoading] = useState(true);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
+    //Home 화면 들어오면 대시보드 다시 로드
     useFocusEffect(
         useCallback(() => {
             loadDashboard();
@@ -39,8 +44,8 @@ export default function HomeScreen() {
 
     async function loadDashboard() {
         try {
-            setLoading(true);
-            setErrorMessage(null);
+            setLoading(true);       //로딩 화면
+            setErrorMessage(null);  //에러 메세지 초기화
 
             const settings = await getSettings();
 
@@ -109,32 +114,40 @@ export default function HomeScreen() {
                     { backgroundColor: dashboard.background.color },
                 ]}
                 contentContainerStyle={styles.content}
+                refreshControl={        //당겨서 새로고침
+                    <RefreshControl
+                        refreshing={loading}
+                        onRefresh={loadDashboard}
+                        tintColor="#3182F6"
+                        colors={["#3182F6"]}
+                    />
+                }
             >
-                <View style={styles.headerRow}>
-                    <View>
-                        <Text style={[styles.title, { color: textColor }]}>UV Alert</Text>
-                        <Text style={[styles.headerSubText, { color: subTextColor }]}>
-                            {formatDateTime(dashboard.currentTime)}
-                        </Text>
-                    </View>
 
-                    <Pressable style={styles.refreshButton} onPress={loadDashboard}>
-                        <Text style={styles.refreshButtonText}>새로고침</Text>
-                    </Pressable>
+                {/* 날짜 및 시간 */}
+                <View>
+                    {/* 앞부분(날짜)만 가져와서 출력 */}
+                    <Text style={[styles.headerDate, { color: subTextColor }]}>
+                        {formatDateTime(dashboard.currentTime).split(" 오")[0]}
+                    </Text>
+
+                    {/* 뒷부분(오전/오후 시간)만 가져와서 출력 */}
+                    <Text style={[styles.headerTime, { color: textColor }]}>
+                        {"오" + formatDateTime(dashboard.currentTime).split(" 오")[1]}
+                    </Text>
                 </View>
 
+                {/* 위치, 누르면 변경 화면 이동 */}
                 <Pressable
-                    style={[styles.locationCard, { backgroundColor: cardBackgroundColor }]}
                     onPress={() => router.push("/location-settings")}
+                    style={styles.locationCard}
                 >
-                    <Text style={[styles.label, { color: subTextColor }]}>현재 위치</Text>
-                    <Text style={[styles.locationName, { color: textColor }]}>
+                    {/* 지도 이모티콘 */}
+                    <FontAwesome name="map-marker" size={20} color="#000080" style={{ marginRight: 6 }} />
+                    {/* 위치 */}
+                    <Text style={styles.locationName}>
                         {dashboard.location.name}
                     </Text>
-                    <Text style={[styles.subText, { color: subTextColor }]}>
-                        지역 코드: {dashboard.location.areaNo}
-                    </Text>
-                    <Text style={styles.linkText}>눌러서 위치 변경하기</Text>
                 </Pressable>
 
                 <View style={[styles.selectorCard, { backgroundColor: cardBackgroundColor }]}>
@@ -207,7 +220,6 @@ export default function HomeScreen() {
                 </View>
 
                 <View style={[styles.backgroundCard, { backgroundColor: softCardBackgroundColor }]}>
-                    <Text style={[styles.label, { color: subTextColor }]}>배경 테마</Text>
                     <Text style={[styles.value, { color: textColor }]}>
                         {dashboard.background.theme}
                     </Text>
@@ -216,7 +228,7 @@ export default function HomeScreen() {
                     </Text>
                 </View>
             </ScrollView>
-        </ScreenContainer>
+        </ScreenContainer >
     );
 }
 
@@ -542,45 +554,36 @@ const styles = StyleSheet.create({
         color: "#FFFFFF",
         fontWeight: "800",
     },
-    headerRow: {
-        flexDirection: "row",
-        justifyContent: "space-between",
-        alignItems: "flex-start",
+    headerDate: {
+        fontSize: 14,
+        fontWeight: "700",
+        lineHeight: 18,
+        marginBottom: 2,
     },
-    title: {
-        fontSize: 30,
+    headerTime: {
+        fontSize: 32,
         fontWeight: "900",
-        color: "#111827",
-    },
-    headerSubText: {
-        marginTop: 4,
-        fontSize: 13,
-        color: "#374151",
-    },
-    refreshButton: {
-        backgroundColor: "#111827",
-        paddingVertical: 8,
-        paddingHorizontal: 12,
-        borderRadius: 10,
-    },
-    refreshButtonText: {
-        color: "#FFFFFF",
-        fontSize: 12,
-        fontWeight: "800",
+        lineHeight: 34,
     },
     locationCard: {
-        padding: 16,
-        borderRadius: 18,
-    },
-    label: {
-        fontSize: 14,
-        color: "#6B7280",
-        marginBottom: 8,
+        flexDirection: "row",
+        alignSelf: "flex-start",
+        backgroundColor: "#F5F5F5",
+        paddingVertical: 10,
+        paddingHorizontal: 16,
+        borderRadius: 50,
+        // 부드러운 그림자 효과
+        elevation: 3,
+        shadowColor: "#000000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.08,
+        shadowRadius: 4,
     },
     locationName: {
-        fontSize: 22,
-        fontWeight: "900",
-        color: "#111827",
+        fontSize: 16,
+        fontWeight: "700",
+        lineHeight: 24,
+        color: "#000080",
     },
     subText: {
         marginTop: 4,
