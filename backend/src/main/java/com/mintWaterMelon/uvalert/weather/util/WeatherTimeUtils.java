@@ -81,6 +81,26 @@ public class WeatherTimeUtils {
         return new ShortForecastBaseTime(baseDate, "2300");
     }
 
+    public static ShortForecastBaseTime calculateSafeFallbackBaseTime(
+            LocalDate selectedDate,
+            LocalDateTime now,
+            ShortForecastBaseTime currentBaseTime
+    ) {
+        ShortForecastBaseTime candidate = new ShortForecastBaseTime(
+                selectedDate.minusDays(1),
+                "2300"
+        );
+
+        LocalDateTime candidateDateTime = candidate.date()
+                .atTime(23, 10);
+
+        if (candidateDateTime.isAfter(now)) {
+            return currentBaseTime;
+        }
+
+        return candidate;
+    }
+
     public record ShortForecastBaseTime(
             LocalDate date,
             String time

@@ -79,19 +79,39 @@ public class HomeDashboardService {
 
         List<HomeDashboardSlot> slots = getAllDaySlots(selectedDate);
 
-        ShortForecastBaseTime shortForecastBaseTime =
+        ShortForecastBaseTime currentShortForecastBaseTime =
                 WeatherTimeUtils.calculateShortForecastBaseTime(currentTime);
+
+        ShortForecastBaseTime fallbackShortForecastBaseTime =
+                WeatherTimeUtils.calculateSafeFallbackBaseTime(
+                        selectedDate,
+                        currentTime,
+                        currentShortForecastBaseTime
+                );
 
         String livingWeatherTime =
                 WeatherTimeUtils.toLivingWeatherTime(selectedDate);
 
-        WeatherApiItemsResponse shortForecast =
+        WeatherApiItemsResponse currentShortForecast =
                 weatherService.getShortForecast(
-                        shortForecastBaseTime.baseDate(),
-                        shortForecastBaseTime.baseTime(),
+                        currentShortForecastBaseTime.baseDate(),
+                        currentShortForecastBaseTime.baseTime(),
                         area.gridX(),
                         area.gridY()
                 );
+
+        WeatherApiItemsResponse fallbackShortForecast;
+
+        if (currentShortForecastBaseTime.equals(fallbackShortForecastBaseTime)) {
+            fallbackShortForecast = currentShortForecast;
+        } else {
+            fallbackShortForecast = weatherService.getShortForecast(
+                    fallbackShortForecastBaseTime.baseDate(),
+                    fallbackShortForecastBaseTime.baseTime(),
+                    area.gridX(),
+                    area.gridY()
+            );
+        }
 
         WeatherHourlyIndexResponse uvIndex =
                 weatherService.getUvIndex(
@@ -105,7 +125,11 @@ public class HomeDashboardService {
                         livingWeatherTime
                 );
 
-        HomeTableRowResponse weatherRow = createWeatherRow(slots, shortForecast);
+        HomeTableRowResponse weatherRow = createWeatherRow(
+                slots,
+                currentShortForecast,
+                fallbackShortForecast
+        );
         HomeTableRowResponse uvIndexRow = createUvIndexRow(slots, uvIndex);
         HomeTableRowResponse airStagnationRow = createAirStagnationRow(slots, airStagnation);
 
@@ -241,15 +265,17 @@ public class HomeDashboardService {
 
     private HomeTableRowResponse createWeatherRow(
             List<HomeDashboardSlot> slots,
-            WeatherApiItemsResponse shortForecast
+            WeatherApiItemsResponse currentShortForecast,
+            WeatherApiItemsResponse previousShortForecast
     ) {
         return new HomeTableRowResponse(
                 HomeTableRowType.WEATHER,
                 "날씨 및 온도",
                 slots.stream()
-                        .map(slot -> createWeatherCell(
+                        .map(slot -> createWeatherCellWithFallback(
                                 slot,
-                                shortForecast.items()
+                                currentShortForecast.items(),
+                                previousShortForecast.items()
                         ))
                         .toList()
         );
@@ -304,6 +330,26 @@ public class HomeDashboardService {
                 temperatureValue,
                 weatherText
         );
+    }
+
+    private HomeTableCellResponse createWeatherCellWithFallback(
+            HomeDashboardSlot slot,
+            List<WeatherApiItem> currentItems,
+            List<WeatherApiItem> previousItems
+    ) {
+        HomeTableCellResponse currentCell = createWeatherCell(slot, currentItems);
+
+        if (!isEmptyWeatherCell(currentCell)) {
+            return currentCell;
+        }
+
+        return createWeatherCell(slot, previousItems);
+    }
+
+    private boolean isEmptyWeatherCell(HomeTableCellResponse cell) {
+        return "-".equals(cell.mainText())
+                && "-".equals(cell.subText())
+                && cell.value() == null;
     }
 
     private Optional<String> findForecastValue(
