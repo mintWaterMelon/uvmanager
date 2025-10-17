@@ -113,7 +113,7 @@ public class HomeDashboardService {
                 slots.stream()
                         .map(slot -> new HomeTimeSlotResponse(
                                 slot.date(),
-                                slot.displayTime(),
+                                slot.time(),
                                 isCurrentSlot(slot, currentTime)
                         ))
                         .toList(),
@@ -183,15 +183,14 @@ public class HomeDashboardService {
 
     private List<HomeDashboardSlot> getAllDaySlots(LocalDate selectedDate) {
         return List.of(
-                new HomeDashboardSlot(selectedDate, "00:00", "0000"),
-                new HomeDashboardSlot(selectedDate, "03:00", "0300"),
-                new HomeDashboardSlot(selectedDate, "06:00", "0600"),
-                new HomeDashboardSlot(selectedDate, "09:00", "0900"),
-                new HomeDashboardSlot(selectedDate, "12:00", "1200"),
-                new HomeDashboardSlot(selectedDate, "15:00", "1500"),
-                new HomeDashboardSlot(selectedDate, "18:00", "1800"),
-                new HomeDashboardSlot(selectedDate, "21:00", "2100"),
-                new HomeDashboardSlot(selectedDate.plusDays(1), "24:00", "0000")
+                new HomeDashboardSlot(selectedDate, "00:00"),
+                new HomeDashboardSlot(selectedDate, "03:00"),
+                new HomeDashboardSlot(selectedDate, "06:00"),
+                new HomeDashboardSlot(selectedDate, "09:00"),
+                new HomeDashboardSlot(selectedDate, "12:00"),
+                new HomeDashboardSlot(selectedDate, "15:00"),
+                new HomeDashboardSlot(selectedDate, "18:00"),
+                new HomeDashboardSlot(selectedDate, "21:00")
         );
     }
 
@@ -203,7 +202,7 @@ public class HomeDashboardService {
             return false;
         }
 
-        return slot.displayTime().equals(calculateCurrentSlotTime(currentTime));
+        return slot.time().equals(calculateCurrentSlotTime(currentTime));
     }
 
     private String calculateCurrentSlotTime(LocalDateTime currentTime) {
@@ -261,7 +260,7 @@ public class HomeDashboardService {
             List<WeatherApiItem> items
     ) {
         String fcstDate = WeatherTimeUtils.toFcstDate(slot.date());
-        String fcstTime = slot.apiTime();
+        String fcstTime = slot.time().replace(":", "");
 
         Optional<String> temperature = findForecastValue(
                 items,
@@ -299,7 +298,7 @@ public class HomeDashboardService {
 
         return new HomeTableCellResponse(
                 slot.date(),
-                slot.displayTime(),
+                slot.time(),
                 weatherText,
                 temperatureText,
                 temperatureValue,
@@ -379,13 +378,13 @@ public class HomeDashboardService {
             Map<Integer, Integer> hourlyValues,
             String type
     ) {
-        int hour = Integer.parseInt(slot.apiTime().substring(0, 2));
+        int hour = Integer.parseInt(slot.time().substring(0, 2));
         Integer value = hourlyValues.get(hour);
 
         if (value == null) {
             return new HomeTableCellResponse(
                     slot.date(),
-                    slot.displayTime(),
+                    slot.time(),
                     "-",
                     "정보 없음",
                     null,
@@ -403,7 +402,7 @@ public class HomeDashboardService {
 
         return new HomeTableCellResponse(
                 slot.date(),
-                slot.displayTime(),
+                slot.time(),
                 String.valueOf(value),
                 levelText,
                 value,

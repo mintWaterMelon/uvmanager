@@ -42,6 +42,19 @@ public class KmaUvIndexClient {
                 .retrieve()
                 .body(JsonNode.class);
 
+        JsonNode header = response.path("response").path("header");
+
+        String resultCode = header.path("resultCode").asText();
+        String resultMsg = header.path("resultMsg").asText();
+
+        if ("03".equals(resultCode) || "NO_DATA".equalsIgnoreCase(resultMsg)) {
+            return new WeatherHourlyIndexResponse(
+                    areaNo,
+                    time,
+                    new LinkedHashMap<>()
+            );
+        }
+
         validateResponse(response, "자외선지수 API");
 
         JsonNode item = extractFirstItem(response);
