@@ -15,7 +15,6 @@ import {
     getHomeDashboard,
     HomeDashboardResponse,
     HomeDateType,
-    HomeMode,
     HomeTableCell,
     HomeTableRow,
 } from "../api/homeApi";
@@ -30,7 +29,6 @@ export default function HomeScreen() {
     //대쉬보드 데이터
     const [dashboard, setDashboard] = useState<HomeDashboardResponse | null>(null);
     const [dateType, setDateType] = useState<HomeDateType>("TODAY");
-    const [mode, setMode] = useState<HomeMode>("DAY");
 
     const [loading, setLoading] = useState(true);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -39,7 +37,7 @@ export default function HomeScreen() {
     useFocusEffect(
         useCallback(() => {
             loadDashboard();
-        }, [dateType, mode])
+        }, [dateType])
     );
 
     async function loadDashboard() {
@@ -51,8 +49,7 @@ export default function HomeScreen() {
 
             const data = await getHomeDashboard(
                 settings.defaultAreaNo,
-                dateType,
-                mode
+                dateType
             );
 
             setDashboard(data);
@@ -66,10 +63,6 @@ export default function HomeScreen() {
 
     function handleChangeDateType(nextDateType: HomeDateType) {
         setDateType(nextDateType);
-    }
-
-    function handleToggleMode() {
-        setMode((prev) => (prev === "DAY" ? "NIGHT" : "DAY"));
     }
 
     if (loading && dashboard === null) {
@@ -174,58 +167,35 @@ export default function HomeScreen() {
                         />
                     </View>
 
-                    <View style={styles.modeSelectorBox}>
-                        <View>
-                            <Text style={[styles.selectorTitle, { color: textColor }]}>시간대 선택</Text>
-                            <Text style={[styles.selectorDescription, { color: subTextColor }]}>
-                                {mode === "DAY"
-                                    ? "06시부터 18시까지의 낮 정보를 보여줍니다."
-                                    : "18시부터 다음날 06시까지의 밤 정보를 보여줍니다."}
-                            </Text>
-                        </View>
+                    <View style={[styles.tableCard, { backgroundColor: cardBackgroundColor }]}>
+                        <Text style={[styles.sectionTitle, { color: textColor }]}>시간대별 정보</Text>
+                        <Text style={[styles.tableHint, { color: subTextColor }]}>
+                            현재 시간대는 굵은 테두리로 표시됩니다.
+                        </Text>
 
-                        <Pressable
-                            style={[
-                                styles.modeToggleButton,
-                                mode === "NIGHT" && styles.modeToggleButtonNight,
-                            ]}
-                            onPress={handleToggleMode}
-                        >
-                            <Text style={styles.modeToggleText}>
-                                {mode === "DAY" ? "☀️ 낮" : "🌙 밤"}
-                            </Text>
-                        </Pressable>
+                        <DashboardTable dashboard={dashboard} />
                     </View>
-                </View>
 
-                <View style={[styles.tableCard, { backgroundColor: cardBackgroundColor }]}>
-                    <Text style={[styles.sectionTitle, { color: textColor }]}>시간대별 정보</Text>
-                    <Text style={[styles.tableHint, { color: subTextColor }]}>
-                        현재 시간대는 굵은 테두리로 표시됩니다.
-                    </Text>
+                    <View style={[styles.adviceCard, { backgroundColor: cardBackgroundColor }]}>
+                        <Text style={styles.adviceBadge}>
+                            {convertSeverityText(dashboard.advice.severity)}
+                        </Text>
+                        <Text style={[styles.adviceTitle, { color: textColor }]}>
+                            {dashboard.advice.title}
+                        </Text>
+                        <Text style={[styles.adviceMessage, { color: subTextColor }]}>
+                            {dashboard.advice.message}
+                        </Text>
+                    </View>
 
-                    <DashboardTable dashboard={dashboard} />
-                </View>
-
-                <View style={[styles.adviceCard, { backgroundColor: cardBackgroundColor }]}>
-                    <Text style={styles.adviceBadge}>
-                        {convertSeverityText(dashboard.advice.severity)}
-                    </Text>
-                    <Text style={[styles.adviceTitle, { color: textColor }]}>
-                        {dashboard.advice.title}
-                    </Text>
-                    <Text style={[styles.adviceMessage, { color: subTextColor }]}>
-                        {dashboard.advice.message}
-                    </Text>
-                </View>
-
-                <View style={[styles.backgroundCard, { backgroundColor: softCardBackgroundColor }]}>
-                    <Text style={[styles.value, { color: textColor }]}>
-                        {dashboard.background.theme}
-                    </Text>
-                    <Text style={[styles.subText, { color: subTextColor }]}>
-                        {dashboard.background.description}
-                    </Text>
+                    <View style={[styles.backgroundCard, { backgroundColor: softCardBackgroundColor }]}>
+                        <Text style={[styles.value, { color: textColor }]}>
+                            {dashboard.background.theme}
+                        </Text>
+                        <Text style={[styles.subText, { color: subTextColor }]}>
+                            {dashboard.background.description}
+                        </Text>
+                    </View>
                 </View>
             </ScrollView>
         </ScreenContainer >
@@ -637,31 +607,6 @@ const styles = StyleSheet.create({
         fontSize: 12,
         lineHeight: 18,
         color: "#6B7280",
-    },
-    modeSelectorBox: {
-        paddingTop: 12,
-        borderTopWidth: 1,
-        borderTopColor: "#E5E7EB",
-        flexDirection: "row",
-        justifyContent: "space-between",
-        alignItems: "center",
-        gap: 12,
-    },
-    modeToggleButton: {
-        minWidth: 84,
-        backgroundColor: "#FBBF24",
-        paddingVertical: 11,
-        paddingHorizontal: 14,
-        borderRadius: 999,
-        alignItems: "center",
-    },
-    modeToggleButtonNight: {
-        backgroundColor: "#111827",
-    },
-    modeToggleText: {
-        color: "#FFFFFF",
-        fontSize: 14,
-        fontWeight: "900",
     },
     tableCard: {
         padding: 12,

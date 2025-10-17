@@ -7,7 +7,6 @@ public record HomeDashboardResponse(
         LocalDateTime currentTime,
         LocalDate selectedDate,
         HomeDateType dateType,
-        HomeMode mode,
         HomeLocationResponse location,
         HomeBackgroundResponse background,
         HomeTableResponse table,

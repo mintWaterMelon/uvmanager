@@ -57,10 +57,14 @@ public class HomeDashboardService {
                 .orElse(null);
     }
 
+    private boolean isNight(LocalDateTime currentTime) {
+        int hour = currentTime.getHour();
+        return hour >= 18 || hour < 6;
+    }
+
     public HomeDashboardResponse getDashboard(
             String areaNo,
-            HomeDateType dateType,
-            HomeMode mode
+            HomeDateType dateType
     ) {
         LocalDateTime currentTime = LocalDateTime.now();
 
@@ -73,7 +77,7 @@ public class HomeDashboardService {
 
         validateGrid(area);
 
-        List<HomeDashboardSlot> slots = getSlots(selectedDate, mode);
+        List<HomeDashboardSlot> slots = getAllDaySlots(selectedDate);
 
         ShortForecastBaseTime shortForecastBaseTime =
                 WeatherTimeUtils.calculateShortForecastBaseTime(currentTime);
@@ -109,7 +113,7 @@ public class HomeDashboardService {
                 slots.stream()
                         .map(slot -> new HomeTimeSlotResponse(
                                 slot.date(),
-                                slot.time(),
+                                slot.displayTime(),
                                 isCurrentSlot(slot, currentTime)
                         ))
                         .toList(),
@@ -137,18 +141,19 @@ public class HomeDashboardService {
         String representativeWeather = findRepresentativeWeather(weatherRow);
         Integer representativeTemperature = findRepresentativeTemperature(weatherRow);
 
+        HomeMode currentMode = isNight(currentTime) ? HomeMode.NIGHT : HomeMode.DAY;
+
         return new HomeDashboardResponse(
                 currentTime,
                 selectedDate,
                 dateType,
-                mode,
                 new HomeLocationResponse(
                         area.areaNo(),
                         area.displayName()
                 ),
                 homeBackgroundService.decideBackground(
                         new HomeBackgroundCondition(
-                                mode,
+                                currentMode,
                                 representativeWeather,
                                 maxUv,
                                 maxAirStagnation,
@@ -158,7 +163,7 @@ public class HomeDashboardService {
                 table,
                 homeAdviceService.createAdvice(
                         new HomeAdviceCondition(
-                                mode,
+                                currentMode,
                                 representativeWeather,
                                 maxUv,
                                 maxAirStagnation,
@@ -176,26 +181,18 @@ public class HomeDashboardService {
         }
     }
 
-    private List<HomeDashboardSlot> getSlots(
-            LocalDate selectedDate,
-            HomeMode mode
-    ) {
-        return switch (mode) {
-            case DAY -> List.of(
-                    new HomeDashboardSlot(selectedDate, "06:00"),
-                    new HomeDashboardSlot(selectedDate, "09:00"),
-                    new HomeDashboardSlot(selectedDate, "12:00"),
-                    new HomeDashboardSlot(selectedDate, "15:00"),
-                    new HomeDashboardSlot(selectedDate, "18:00")
-            );
-            case NIGHT -> List.of(
-                    new HomeDashboardSlot(selectedDate, "18:00"),
-                    new HomeDashboardSlot(selectedDate, "21:00"),
-                    new HomeDashboardSlot(selectedDate.plusDays(1), "00:00"),
-                    new HomeDashboardSlot(selectedDate.plusDays(1), "03:00"),
-                    new HomeDashboardSlot(selectedDate.plusDays(1), "06:00")
-            );
-        };
+    private List<HomeDashboardSlot> getAllDaySlots(LocalDate selectedDate) {
+        return List.of(
+                new HomeDashboardSlot(selectedDate, "00:00", "0000"),
+                new HomeDashboardSlot(selectedDate, "03:00", "0300"),
+                new HomeDashboardSlot(selectedDate, "06:00", "0600"),
+                new HomeDashboardSlot(selectedDate, "09:00", "0900"),
+                new HomeDashboardSlot(selectedDate, "12:00", "1200"),
+                new HomeDashboardSlot(selectedDate, "15:00", "1500"),
+                new HomeDashboardSlot(selectedDate, "18:00", "1800"),
+                new HomeDashboardSlot(selectedDate, "21:00", "2100"),
+                new HomeDashboardSlot(selectedDate.plusDays(1), "24:00", "0000")
+        );
     }
 
     private boolean isCurrentSlot(
@@ -206,9 +203,7 @@ public class HomeDashboardService {
             return false;
         }
 
-        String currentSlotTime = calculateCurrentSlotTime(currentTime);
-
-        return slot.time().equals(currentSlotTime);
+        return slot.displayTime().equals(calculateCurrentSlotTime(currentTime));
     }
 
     private String calculateCurrentSlotTime(LocalDateTime currentTime) {
@@ -266,7 +261,7 @@ public class HomeDashboardService {
             List<WeatherApiItem> items
     ) {
         String fcstDate = WeatherTimeUtils.toFcstDate(slot.date());
-        String fcstTime = slot.time().replace(":", "");
+        String fcstTime = slot.apiTime();
 
         Optional<String> temperature = findForecastValue(
                 items,
@@ -304,7 +299,7 @@ public class HomeDashboardService {
 
         return new HomeTableCellResponse(
                 slot.date(),
-                slot.time(),
+                slot.displayTime(),
                 weatherText,
                 temperatureText,
                 temperatureValue,
@@ -384,13 +379,13 @@ public class HomeDashboardService {
             Map<Integer, Integer> hourlyValues,
             String type
     ) {
-        int hour = Integer.parseInt(slot.time().substring(0, 2));
+        int hour = Integer.parseInt(slot.apiTime().substring(0, 2));
         Integer value = hourlyValues.get(hour);
 
         if (value == null) {
             return new HomeTableCellResponse(
                     slot.date(),
-                    slot.time(),
+                    slot.displayTime(),
                     "-",
                     "정보 없음",
                     null,
@@ -408,7 +403,7 @@ public class HomeDashboardService {
 
         return new HomeTableCellResponse(
                 slot.date(),
-                slot.time(),
+                slot.displayTime(),
                 String.valueOf(value),
                 levelText,
                 value,

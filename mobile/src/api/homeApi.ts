@@ -1,7 +1,6 @@
 import { apiGet } from "./client";
 
 export type HomeDateType = "TODAY" | "TOMORROW" | "DAY_AFTER_TOMORROW";
-export type HomeMode = "DAY" | "NIGHT";
 
 export type HomeBackground = {
     theme: string;
@@ -50,7 +49,6 @@ export type HomeDashboardResponse = {
     currentTime: string;
     selectedDate: string;
     dateType: HomeDateType;
-    mode: HomeMode;
     location: HomeLocation;
     background: HomeBackground;
     table: HomeTable;
@@ -60,9 +58,8 @@ export type HomeDashboardResponse = {
 export function getHomeDashboard(
     areaNo: string,
     dateType: HomeDateType,
-    mode: HomeMode
 ) {
-    const query = `areaNo=${areaNo}&dateType=${dateType}&mode=${mode}`;
+    const query = `areaNo=${areaNo}&dateType=${dateType}`;
 
     return apiGet<HomeDashboardResponse>(`/api/home/dashboard?${query}`);
 }

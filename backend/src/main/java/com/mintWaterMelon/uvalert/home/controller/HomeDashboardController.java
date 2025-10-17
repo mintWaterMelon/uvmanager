@@ -20,9 +20,8 @@ public class HomeDashboardController {
     @GetMapping("/api/home/dashboard")
     public HomeDashboardResponse getDashboard(
             @RequestParam(defaultValue = "1100000000") String areaNo,
-            @RequestParam(defaultValue = "TODAY") HomeDateType dateType,
-            @RequestParam(defaultValue = "DAY") HomeMode mode
+            @RequestParam(defaultValue = "TODAY") HomeDateType dateType
     ) {
-        return homeDashboardService.getDashboard(areaNo, dateType, mode);
+        return homeDashboardService.getDashboard(areaNo, dateType);
     }
 }
