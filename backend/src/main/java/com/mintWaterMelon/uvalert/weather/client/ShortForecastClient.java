@@ -1,8 +1,8 @@
 package com.mintWaterMelon.uvalert.weather.client;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.mintWaterMelon.uvalert.weather.dto.WeatherApiItem;
-import com.mintWaterMelon.uvalert.weather.dto.WeatherApiItemsResponse;
+import com.mintWaterMelon.uvalert.weather.dto.ShortForecastItem;
+import com.mintWaterMelon.uvalert.weather.dto.ShortForecastResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
@@ -11,13 +11,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Component
-public class KmaShortForecastClient {
+public class ShortForecastClient {
 
     private final RestClient restClient;
     private final String serviceKey;
     private final String shortForecastPath;
 
-    public KmaShortForecastClient(
+    public ShortForecastClient(
             RestClient.Builder restClientBuilder,
             @Value("${kma.short-forecast.base-url}") String baseUrl,
             @Value("${kma.service-key}") String serviceKey,
@@ -30,7 +30,7 @@ public class KmaShortForecastClient {
         this.shortForecastPath = shortForecastPath;
     }
 
-    public WeatherApiItemsResponse getShortForecast(
+    public ShortForecastResponse getShortForecast(
             String baseDate,
             String baseTime,
             int nx,
@@ -54,9 +54,9 @@ public class KmaShortForecastClient {
 
         validateResponse(response, "단기예보 API");
 
-        List<WeatherApiItem> items = extractItems(response);
+        List<ShortForecastItem> items = extractItems(response);
 
-        return new WeatherApiItemsResponse(items);
+        return new ShortForecastResponse(items);
     }
 
     private void validateResponse(JsonNode response, String apiName) {
@@ -70,13 +70,13 @@ public class KmaShortForecastClient {
         }
     }
 
-    private List<WeatherApiItem> extractItems(JsonNode response) {
+    private List<ShortForecastItem> extractItems(JsonNode response) {
         JsonNode itemNode = response.path("response")
                 .path("body")
                 .path("items")
                 .path("item");
 
-        List<WeatherApiItem> items = new ArrayList<>();
+        List<ShortForecastItem> items = new ArrayList<>();
 
         if (itemNode.isArray()) {
             for (JsonNode node : itemNode) {
@@ -89,8 +89,8 @@ public class KmaShortForecastClient {
         return items;
     }
 
-    private WeatherApiItem toItem(JsonNode node) {
-        return new WeatherApiItem(
+    private ShortForecastItem toItem(JsonNode node) {
+        return new ShortForecastItem(
                 node.path("category").asText(),
                 node.path("fcstDate").asText(),
                 node.path("fcstTime").asText(),

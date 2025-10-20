@@ -1,7 +1,7 @@
 package com.mintWaterMelon.uvalert.weather.controller;
 
-import com.mintWaterMelon.uvalert.weather.dto.WeatherApiItemsResponse;
-import com.mintWaterMelon.uvalert.weather.dto.WeatherHourlyIndexResponse;
+import com.mintWaterMelon.uvalert.weather.dto.ShortForecastResponse;
+import com.mintWaterMelon.uvalert.weather.dto.UvIndexResponse;
 import com.mintWaterMelon.uvalert.weather.service.WeatherService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -17,7 +17,7 @@ public class WeatherController {
     }
 
     @GetMapping("/api/weather/uv-index")
-    public WeatherHourlyIndexResponse getUvIndex(
+    public UvIndexResponse getUvIndex(
             @RequestParam String areaNo,
             @RequestParam String time
     ) {
@@ -25,7 +25,7 @@ public class WeatherController {
     }
 
     @GetMapping("/api/weather/short-forecast")
-    public WeatherApiItemsResponse getShortForecast(
+    public ShortForecastResponse getShortForecast(
             @RequestParam String baseDate,
             @RequestParam String baseTime,
             @RequestParam int nx,

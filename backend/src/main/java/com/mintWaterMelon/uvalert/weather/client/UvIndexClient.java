@@ -1,7 +1,7 @@
 package com.mintWaterMelon.uvalert.weather.client;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.mintWaterMelon.uvalert.weather.dto.WeatherHourlyIndexResponse;
+import com.mintWaterMelon.uvalert.weather.dto.UvIndexResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
@@ -10,13 +10,13 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 @Component
-public class KmaUvIndexClient {
+public class UvIndexClient {
 
     private final RestClient restClient;
     private final String serviceKey;
     private final String uvPath;
 
-    public KmaUvIndexClient(
+    public UvIndexClient(
             RestClient.Builder restClientBuilder,
             @Value("${kma.living-weather.base-url}") String baseUrl,
             @Value("${kma.service-key}") String serviceKey,
@@ -29,7 +29,7 @@ public class KmaUvIndexClient {
         this.uvPath = uvPath;
     }
 
-    public WeatherHourlyIndexResponse getUvIndex(String areaNo, String time) {
+    public UvIndexResponse getUvIndex(String areaNo, String time) {
         JsonNode response = restClient.get()
                 .uri(uriBuilder -> uriBuilder
                         .path(uvPath)
@@ -48,7 +48,7 @@ public class KmaUvIndexClient {
         String resultMsg = header.path("resultMsg").asText();
 
         if ("03".equals(resultCode) || "NO_DATA".equalsIgnoreCase(resultMsg)) {
-            return new WeatherHourlyIndexResponse(
+            return new UvIndexResponse(
                     areaNo,
                     time,
                     new LinkedHashMap<>()
@@ -59,7 +59,7 @@ public class KmaUvIndexClient {
 
         JsonNode item = extractFirstItem(response);
 
-        return new WeatherHourlyIndexResponse(
+        return new UvIndexResponse(
                 item.path("areaNo").asText(),
                 item.path("date").asText(),
                 extractHourlyValues(item)

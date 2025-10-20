@@ -1,6 +1,6 @@
 package com.mintWaterMelon.uvalert.weather.dto;
 
-public record WeatherApiItem(
+public record ShortForecastItem(
         String category,
         String fcstDate,
         String fcstTime,

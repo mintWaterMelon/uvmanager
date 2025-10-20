@@ -3,9 +3,9 @@ package com.mintWaterMelon.uvalert.home.service;
 import com.mintWaterMelon.uvalert.area.dto.AreaResponse;
 import com.mintWaterMelon.uvalert.area.service.AreaService;
 import com.mintWaterMelon.uvalert.home.dto.*;
-import com.mintWaterMelon.uvalert.weather.dto.WeatherApiItem;
-import com.mintWaterMelon.uvalert.weather.dto.WeatherApiItemsResponse;
-import com.mintWaterMelon.uvalert.weather.dto.WeatherHourlyIndexResponse;
+import com.mintWaterMelon.uvalert.weather.dto.ShortForecastItem;
+import com.mintWaterMelon.uvalert.weather.dto.ShortForecastResponse;
+import com.mintWaterMelon.uvalert.weather.dto.UvIndexResponse;
 import com.mintWaterMelon.uvalert.weather.service.WeatherService;
 import com.mintWaterMelon.uvalert.weather.util.WeatherTimeUtils;
 import com.mintWaterMelon.uvalert.weather.util.WeatherTimeUtils.ShortForecastBaseTime;
@@ -14,7 +14,6 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -92,7 +91,7 @@ public class HomeDashboardService {
         String livingWeatherTime =
                 WeatherTimeUtils.toLivingWeatherTime(selectedDate);
 
-        WeatherApiItemsResponse currentShortForecast =
+        ShortForecastResponse currentShortForecast =
                 weatherService.getShortForecast(
                         currentShortForecastBaseTime.baseDate(),
                         currentShortForecastBaseTime.baseTime(),
@@ -100,7 +99,7 @@ public class HomeDashboardService {
                         area.gridY()
                 );
 
-        WeatherApiItemsResponse fallbackShortForecast;
+        ShortForecastResponse fallbackShortForecast;
 
         if (currentShortForecastBaseTime.equals(fallbackShortForecastBaseTime)) {
             fallbackShortForecast = currentShortForecast;
@@ -113,7 +112,7 @@ public class HomeDashboardService {
             );
         }
 
-        WeatherHourlyIndexResponse uvIndex =
+        UvIndexResponse uvIndex =
                 weatherService.getUvIndex(
                         area.areaNo(),
                         livingWeatherTime
@@ -266,8 +265,8 @@ public class HomeDashboardService {
 
     private HomeTableRowResponse createWeatherRow(
             List<HomeDashboardSlot> slots,
-            WeatherApiItemsResponse currentShortForecast,
-            WeatherApiItemsResponse previousShortForecast
+            ShortForecastResponse currentShortForecast,
+            ShortForecastResponse previousShortForecast
     ) {
         return new HomeTableRowResponse(
                 HomeTableRowType.WEATHER,
@@ -284,7 +283,7 @@ public class HomeDashboardService {
 
     private HomeTableCellResponse createWeatherCell(
             HomeDashboardSlot slot,
-            List<WeatherApiItem> items
+            List<ShortForecastItem> items
     ) {
         String fcstDate = WeatherTimeUtils.toFcstDate(slot.date());
         String fcstTime = slot.time().replace(":", "");
@@ -335,8 +334,8 @@ public class HomeDashboardService {
 
     private HomeTableCellResponse createWeatherCellWithFallback(
             HomeDashboardSlot slot,
-            List<WeatherApiItem> currentItems,
-            List<WeatherApiItem> previousItems
+            List<ShortForecastItem> currentItems,
+            List<ShortForecastItem> previousItems
     ) {
         HomeTableCellResponse currentCell = createWeatherCell(slot, currentItems);
 
@@ -354,7 +353,7 @@ public class HomeDashboardService {
     }
 
     private Optional<String> findForecastValue(
-            List<WeatherApiItem> items,
+            List<ShortForecastItem> items,
             String fcstDate,
             String fcstTime,
             String category
@@ -363,7 +362,7 @@ public class HomeDashboardService {
                 .filter(item -> item.fcstDate().equals(fcstDate))
                 .filter(item -> item.fcstTime().equals(fcstTime))
                 .filter(item -> item.category().equals(category))
-                .map(WeatherApiItem::fcstValue)
+                .map(ShortForecastItem::fcstValue)
                 .findFirst();
     }
 
@@ -388,7 +387,7 @@ public class HomeDashboardService {
 
     private HomeTableRowResponse createUvIndexRow(
             List<HomeDashboardSlot> slots,
-            WeatherHourlyIndexResponse uvIndex
+            UvIndexResponse uvIndex
     ) {
         return new HomeTableRowResponse(
                 HomeTableRowType.UV_INDEX,
@@ -396,7 +395,7 @@ public class HomeDashboardService {
                 slots.stream()
                         .map(slot -> createUvIndexCell(
                                 slot,
-                                uvIndex.hourlyValues()
+                                uvIndex
                         ))
                         .toList()
         );
@@ -404,8 +403,8 @@ public class HomeDashboardService {
 
     private HomeTableRowResponse createPrecipitationProbabilityRow(
             List<HomeDashboardSlot> slots,
-            WeatherApiItemsResponse currentShortForecast,
-            WeatherApiItemsResponse fallbackShortForecast
+            ShortForecastResponse currentShortForecast,
+            ShortForecastResponse fallbackShortForecast
     ) {
         return new HomeTableRowResponse(
                 HomeTableRowType.PRECIPITATION_PROBABILITY,
@@ -422,8 +421,8 @@ public class HomeDashboardService {
 
     private HomeTableCellResponse createPrecipitationProbabilityCellWithFallback(
             HomeDashboardSlot slot,
-            List<WeatherApiItem> currentItems,
-            List<WeatherApiItem> fallbackItems
+            List<ShortForecastItem> currentItems,
+            List<ShortForecastItem> fallbackItems
     ) {
         HomeTableCellResponse currentCell =
                 createPrecipitationProbabilityCell(slot, currentItems);
@@ -437,7 +436,7 @@ public class HomeDashboardService {
 
     private HomeTableCellResponse createPrecipitationProbabilityCell(
             HomeDashboardSlot slot,
-            List<WeatherApiItem> items
+            List<ShortForecastItem> items
     ) {
         String fcstDate = WeatherTimeUtils.toFcstDate(slot.date());
         String fcstTime = slot.time().replace(":", "");
@@ -511,10 +510,15 @@ public class HomeDashboardService {
 
     private HomeTableCellResponse createUvIndexCell(
             HomeDashboardSlot slot,
-            Map<Integer, Integer> hourlyValues
+            UvIndexResponse uvIndex
     ) {
-        int hour = Integer.parseInt(slot.time().substring(0, 2));
-        Integer value = hourlyValues.get(hour);
+        int hourAfter = calculateHourAfter(
+                uvIndex.baseTime(),
+                slot.date(),
+                slot.time()
+        );
+
+        Integer value = uvIndex.hourlyValues().get(hourAfter);
 
         if (value == null) {
             return new HomeTableCellResponse(
@@ -537,6 +541,30 @@ public class HomeDashboardService {
                 levelText,
                 value,
                 level
+        );
+    }
+
+    private int calculateHourAfter(
+            String baseTime,
+            LocalDate slotDate,
+            String slotTime
+    ) {
+        LocalDateTime baseDateTime = parseLivingWeatherBaseTime(baseTime);
+
+        int hour = Integer.parseInt(slotTime.substring(0, 2));
+
+        LocalDateTime slotDateTime = slotDate.atTime(hour, 0);
+
+        return (int) java.time.Duration.between(
+                baseDateTime,
+                slotDateTime
+        ).toHours();
+    }
+
+    private LocalDateTime parseLivingWeatherBaseTime(String baseTime) {
+        return LocalDateTime.parse(
+                baseTime,
+                java.time.format.DateTimeFormatter.ofPattern("yyyyMMddHH")
         );
     }
 
