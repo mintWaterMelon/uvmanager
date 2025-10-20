@@ -41,7 +41,7 @@ public class ShortForecastClient {
                         .path(shortForecastPath)
                         .queryParam("serviceKey", serviceKey)
                         .queryParam("pageNo", 1)
-                        .queryParam("numOfRows", 1000)
+                        .queryParam("numOfRows", 850)
                         .queryParam("dataType", "JSON")
                         .queryParam("base_date", baseDate)
                         .queryParam("base_time", baseTime)
