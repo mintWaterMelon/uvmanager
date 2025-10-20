@@ -119,19 +119,19 @@ public class HomeDashboardService {
                         livingWeatherTime
                 );
 
-        WeatherHourlyIndexResponse airStagnation =
-                weatherService.getAirStagnationIndex(
-                        area.areaNo(),
-                        livingWeatherTime
-                );
-
         HomeTableRowResponse weatherRow = createWeatherRow(
                 slots,
                 currentShortForecast,
                 fallbackShortForecast
         );
+
         HomeTableRowResponse uvIndexRow = createUvIndexRow(slots, uvIndex);
-        HomeTableRowResponse airStagnationRow = createAirStagnationRow(slots, airStagnation);
+
+        HomeTableRowResponse precipitationRow = createPrecipitationProbabilityRow(
+                slots,
+                currentShortForecast,
+                fallbackShortForecast
+        );
 
         HomeTableResponse table = new HomeTableResponse(
                 slots.stream()
@@ -144,7 +144,7 @@ public class HomeDashboardService {
                 List.of(
                         weatherRow,
                         uvIndexRow,
-                        airStagnationRow
+                        precipitationRow
                 )
         );
 
@@ -155,9 +155,10 @@ public class HomeDashboardService {
                 .max()
                 .orElse(0);
 
-        int maxAirStagnation = airStagnation.hourlyValues()
-                .values()
+        int maxPrecipitationProbability = precipitationRow.cells()
                 .stream()
+                .map(HomeTableCellResponse::value)
+                .filter(value -> value != null)
                 .mapToInt(Integer::intValue)
                 .max()
                 .orElse(0);
@@ -180,7 +181,7 @@ public class HomeDashboardService {
                                 currentMode,
                                 representativeWeather,
                                 maxUv,
-                                maxAirStagnation,
+                                maxPrecipitationProbability,
                                 representativeTemperature
                         )
                 ),
@@ -190,7 +191,7 @@ public class HomeDashboardService {
                                 currentMode,
                                 representativeWeather,
                                 maxUv,
-                                maxAirStagnation,
+                                maxPrecipitationProbability,
                                 representativeTemperature
                         )
                 )
@@ -393,36 +394,124 @@ public class HomeDashboardService {
                 HomeTableRowType.UV_INDEX,
                 "자외선 지수",
                 slots.stream()
-                        .map(slot -> createIndexCell(
+                        .map(slot -> createUvIndexCell(
                                 slot,
-                                uvIndex.hourlyValues(),
-                                "UV"
+                                uvIndex.hourlyValues()
                         ))
                         .toList()
         );
     }
 
-    private HomeTableRowResponse createAirStagnationRow(
+    private HomeTableRowResponse createPrecipitationProbabilityRow(
             List<HomeDashboardSlot> slots,
-            WeatherHourlyIndexResponse airStagnation
+            WeatherApiItemsResponse currentShortForecast,
+            WeatherApiItemsResponse fallbackShortForecast
     ) {
         return new HomeTableRowResponse(
-                HomeTableRowType.AIR_STAGNATION,
-                "대기정체지수",
+                HomeTableRowType.PRECIPITATION_PROBABILITY,
+                "강수확률",
                 slots.stream()
-                        .map(slot -> createIndexCell(
+                        .map(slot -> createPrecipitationProbabilityCellWithFallback(
                                 slot,
-                                airStagnation.hourlyValues(),
-                                "AIR"
+                                currentShortForecast.items(),
+                                fallbackShortForecast.items()
                         ))
                         .toList()
         );
     }
 
-    private HomeTableCellResponse createIndexCell(
+    private HomeTableCellResponse createPrecipitationProbabilityCellWithFallback(
             HomeDashboardSlot slot,
-            Map<Integer, Integer> hourlyValues,
-            String type
+            List<WeatherApiItem> currentItems,
+            List<WeatherApiItem> fallbackItems
+    ) {
+        HomeTableCellResponse currentCell =
+                createPrecipitationProbabilityCell(slot, currentItems);
+
+        if (!isEmptyPrecipitationCell(currentCell)) {
+            return currentCell;
+        }
+
+        return createPrecipitationProbabilityCell(slot, fallbackItems);
+    }
+
+    private HomeTableCellResponse createPrecipitationProbabilityCell(
+            HomeDashboardSlot slot,
+            List<WeatherApiItem> items
+    ) {
+        String fcstDate = WeatherTimeUtils.toFcstDate(slot.date());
+        String fcstTime = slot.time().replace(":", "");
+
+        Optional<String> pop = findForecastValue(
+                items,
+                fcstDate,
+                fcstTime,
+                "POP"
+        );
+
+        if (pop.isEmpty()) {
+            return new HomeTableCellResponse(
+                    slot.date(),
+                    slot.time(),
+                    "-",
+                    "정보 없음",
+                    null,
+                    "UNKNOWN"
+            );
+        }
+
+        Integer value = parseIntegerSafely(pop.get());
+
+        return new HomeTableCellResponse(
+                slot.date(),
+                slot.time(),
+                pop.get() + "%",
+                classifyPopLevelText(value),
+                value,
+                classifyPopLevel(value)
+        );
+    }
+
+    private boolean isEmptyPrecipitationCell(HomeTableCellResponse cell) {
+        return "-".equals(cell.mainText())
+                && cell.value() == null;
+    }
+
+    private String classifyPopLevel(Integer value) {
+        if (value == null) {
+            return "UNKNOWN";
+        }
+
+        if (value < 30) {
+            return "LOW";
+        }
+
+        if (value < 60) {
+            return "MODERATE";
+        }
+
+        return "HIGH";
+    }
+
+    private String classifyPopLevelText(Integer value) {
+        if (value == null) {
+            return "정보 없음";
+        }
+
+        if (value < 30) {
+            return "낮음";
+        }
+
+        if (value < 60) {
+            return "보통";
+        }
+
+        return "높음";
+    }
+
+    private HomeTableCellResponse createUvIndexCell(
+            HomeDashboardSlot slot,
+            Map<Integer, Integer> hourlyValues
     ) {
         int hour = Integer.parseInt(slot.time().substring(0, 2));
         Integer value = hourlyValues.get(hour);
@@ -438,13 +527,8 @@ public class HomeDashboardService {
             );
         }
 
-        String level = "UV".equals(type)
-                ? classifyUvLevel(value)
-                : classifyAirStagnationLevel(value);
-
-        String levelText = "UV".equals(type)
-                ? convertUvLevelText(level)
-                : convertAirStagnationLevelText(level);
+        String level = classifyUvLevel(value);
+        String levelText = convertUvLevelText(level);
 
         return new HomeTableCellResponse(
                 slot.date(),
@@ -479,25 +563,6 @@ public class HomeDashboardService {
             case "HIGH" -> "높음";
             case "VERY_HIGH" -> "매우 높음";
             case "EXTREME" -> "위험";
-            default -> "정보 없음";
-        };
-    }
-
-    private String classifyAirStagnationLevel(int value) {
-        if (value <= 1) {
-            return "LOW";
-        }
-        if (value <= 3) {
-            return "MODERATE";
-        }
-        return "HIGH";
-    }
-
-    private String convertAirStagnationLevelText(String level) {
-        return switch (level) {
-            case "LOW" -> "낮음";
-            case "MODERATE" -> "보통";
-            case "HIGH" -> "높음";
             default -> "정보 없음";
         };
     }

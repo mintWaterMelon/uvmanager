@@ -30,11 +30,11 @@ public class HomeAdviceService {
             );
         }
 
-        if (condition.maxAirStagnation() >= 4) {
+        if (condition.maxPrecipitationProbability() >= 60) {
             return new HomeAdviceResponse(
-                    "공기 흐름이 좋지 않을 수 있어요",
-                    "대기정체지수가 높습니다. 환기나 장시간 야외활동이 부담될 수 있으니 외출 전 공기 상태를 함께 확인하세요.",
-                    HomeAdviceSeverity.WARNING
+                    "비가 올 가능성이 높아요",
+                    "외출 전 우산을 준비하고, 자외선 정보와 함께 강수확률도 확인하세요.",
+                    HomeAdviceSeverity.INFO
             );
         }
 
@@ -86,10 +86,10 @@ public class HomeAdviceService {
     }
 
     private HomeAdviceResponse createNightAdvice(HomeAdviceCondition condition) {
-        if (condition.maxAirStagnation() >= 4) {
+        if (condition.maxPrecipitationProbability() >= 60) {
             return new HomeAdviceResponse(
-                    "밤에도 공기 흐름을 확인하세요",
-                    "밤 시간대에는 자외선 걱정은 적지만, 대기정체지수가 높다면 환기와 야외활동에 주의하는 것이 좋습니다.",
+                    "밤에는 빗길을 조심하세요",
+                    "강수확률이 높은 밤에는 이동 시 시야와 노면 상태에 주의하세요.",
                     HomeAdviceSeverity.INFO
             );
         }

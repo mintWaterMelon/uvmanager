@@ -399,8 +399,8 @@ function convertRowLabel(label: string) {
         return "☀️\n자외선";
     }
 
-    if (label === "대기정체지수") {
-        return "🌫️\n미세\n먼지";
+    if (label === "강수확률") {
+        return "🌫️\n강수\n확률";
     }
 
     return label;

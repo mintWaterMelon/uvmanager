@@ -24,14 +24,6 @@ public class WeatherController {
         return weatherService.getUvIndex(areaNo, time);
     }
 
-    @GetMapping("/api/weather/air-stagnation")
-    public WeatherHourlyIndexResponse getAirStagnationIndex(
-            @RequestParam String areaNo,
-            @RequestParam String time
-    ) {
-        return weatherService.getAirStagnationIndex(areaNo, time);
-    }
-
     @GetMapping("/api/weather/short-forecast")
     public WeatherApiItemsResponse getShortForecast(
             @RequestParam String baseDate,

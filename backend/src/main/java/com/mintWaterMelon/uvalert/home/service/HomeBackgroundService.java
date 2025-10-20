@@ -50,11 +50,11 @@ public class HomeBackgroundService {
             );
         }
 
-        if (condition.maxAirStagnation() >= 4) {
+        if (condition.maxPrecipitationProbability() >= 60) {
             return new HomeBackgroundResponse(
-                    HomeBackgroundTheme.AIR_STAGNATION_HIGH,
-                    "#E5E7EB",
-                    "대기정체지수가 높아 공기 흐름이 좋지 않을 수 있습니다."
+                    HomeBackgroundTheme.RAINY,
+                    "#CBD5E1",
+                    "강수확률이 높은 날씨입니다."
             );
         }
 

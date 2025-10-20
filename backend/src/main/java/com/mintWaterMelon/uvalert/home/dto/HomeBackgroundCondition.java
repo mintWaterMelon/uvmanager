@@ -4,7 +4,7 @@ public record HomeBackgroundCondition(
         HomeMode mode,
         String representativeWeather,
         int maxUv,
-        int maxAirStagnation,
+        int maxPrecipitationProbability,
         Integer representativeTemperature
 ) {
 }
