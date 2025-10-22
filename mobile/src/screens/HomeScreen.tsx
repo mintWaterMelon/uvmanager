@@ -97,7 +97,6 @@ export default function HomeScreen() {
     const textColor = getThemeTextColor(theme);
     const subTextColor = getThemeSubTextColor(theme);
     const cardBackgroundColor = getCardBackgroundColor(theme);
-    const softCardBackgroundColor = getSoftCardBackgroundColor(theme);
 
     return (
         <ScreenContainer style={{ backgroundColor: dashboard.background.color }}>
@@ -143,59 +142,40 @@ export default function HomeScreen() {
                     </Text>
                 </Pressable>
 
-                <View style={[styles.selectorCard, { backgroundColor: cardBackgroundColor }]}>
-                    <Text style={[styles.selectorTitle, { color: textColor }]}>날짜 선택</Text>
-
+                <View style={[styles.dateSelectorCard, { backgroundColor: cardBackgroundColor }]}> 
                     <View style={styles.dateButtonRow}>
                         <DateButton
                             label="오늘"
-                            emoji="📍"
                             active={dateType === "TODAY"}
                             onPress={() => handleChangeDateType("TODAY")}
                         />
                         <DateButton
                             label="내일"
-                            emoji="➡️"
                             active={dateType === "TOMORROW"}
                             onPress={() => handleChangeDateType("TOMORROW")}
                         />
                         <DateButton
                             label="모레"
-                            emoji="⏭️"
                             active={dateType === "DAY_AFTER_TOMORROW"}
                             onPress={() => handleChangeDateType("DAY_AFTER_TOMORROW")}
                         />
                     </View>
+                </View>
 
-                    <View style={[styles.tableCard, { backgroundColor: cardBackgroundColor }]}>
-                        <Text style={[styles.sectionTitle, { color: textColor }]}>시간대별 정보</Text>
-                        <Text style={[styles.tableHint, { color: subTextColor }]}>
-                            현재 시간대는 굵은 테두리로 표시됩니다.
-                        </Text>
+                <View style={[styles.tableCard, { backgroundColor: cardBackgroundColor }]}> 
+                    <DashboardTable dashboard={dashboard} />
+                </View>
 
-                        <DashboardTable dashboard={dashboard} />
-                    </View>
-
-                    <View style={[styles.adviceCard, { backgroundColor: cardBackgroundColor }]}>
-                        <Text style={styles.adviceBadge}>
-                            {convertSeverityText(dashboard.advice.severity)}
-                        </Text>
-                        <Text style={[styles.adviceTitle, { color: textColor }]}>
-                            {dashboard.advice.title}
-                        </Text>
-                        <Text style={[styles.adviceMessage, { color: subTextColor }]}>
-                            {dashboard.advice.message}
-                        </Text>
-                    </View>
-
-                    <View style={[styles.backgroundCard, { backgroundColor: softCardBackgroundColor }]}>
-                        <Text style={[styles.value, { color: textColor }]}>
-                            {dashboard.background.theme}
-                        </Text>
-                        <Text style={[styles.subText, { color: subTextColor }]}>
-                            {dashboard.background.description}
-                        </Text>
-                    </View>
+                <View style={[styles.adviceCard, { backgroundColor: cardBackgroundColor }]}> 
+                    <Text style={styles.adviceBadge}>
+                        {convertSeverityText(dashboard.advice.severity)}
+                    </Text>
+                    <Text style={[styles.adviceTitle, { color: textColor }]}> 
+                        {dashboard.advice.title}
+                    </Text>
+                    <Text style={[styles.adviceMessage, { color: subTextColor }]}> 
+                        {dashboard.advice.message}
+                    </Text>
                 </View>
             </ScrollView>
         </ScreenContainer >
@@ -204,12 +184,10 @@ export default function HomeScreen() {
 
 function DateButton({
     label,
-    emoji,
     active,
     onPress,
 }: {
     label: string;
-    emoji: string;
     active: boolean;
     onPress: () => void;
 }) {
@@ -218,7 +196,6 @@ function DateButton({
             style={[styles.dateButton, active && styles.dateButtonActive]}
             onPress={onPress}
         >
-            <Text style={styles.dateButtonEmoji}>{emoji}</Text>
             <Text
                 style={[
                     styles.dateButtonText,
@@ -253,8 +230,7 @@ function DashboardTable({
                                 slot.current && styles.currentColumnHeader,
                             ]}
                         >
-                            <Text style={styles.headerText}>{slot.time}</Text>
-                            <Text style={styles.dateText}>{formatShortDate(slot.date)}</Text>
+                            <Text style={styles.headerText}>{formatHourLabel(slot.time)}</Text>
                             {slot.current && <Text style={styles.currentBadge}>현재</Text>}
                         </View>
                     ))}
@@ -298,6 +274,7 @@ function DashboardTableRow({
                         key={`${row.type}-${cell.date}-${cell.time}`}
                         cell={cell}
                         current={current}
+                        rowLabel={row.label}
                     />
                 );
             })}
@@ -308,9 +285,11 @@ function DashboardTableRow({
 function DashboardTableCell({
     cell,
     current,
+    rowLabel,
 }: {
     cell: HomeTableCell;
     current: boolean;
+    rowLabel: string;
 }) {
     const shouldShowLevel =
         cell.level !== "UNKNOWN" &&
@@ -323,13 +302,31 @@ function DashboardTableCell({
         cell.level !== "소나기" &&
         cell.level !== "강수";
 
+    const levelText = formatLevelText(cell.level);
+    const shouldShowSubText =
+        cell.subText.trim().length > 0 &&
+        cell.subText.trim() !== levelText;
+    const isPrecipitationCell = cell.mainText.includes("%");
+    const isUvCell = rowLabel === "자외선 지수";
+    const uvTextColor = isUvCell ? getUvLevelColor(cell.level) : null;
+    const mainTextStyle = [
+        styles.cellMainText,
+        isPrecipitationCell && styles.precipitationMainText,
+        uvTextColor && { color: uvTextColor },
+    ];
+
     return (
         <View style={[styles.dataCell, current && styles.currentColumnCell]}>
-            <Text style={styles.cellMainText}>{formatCellMainText(cell)}</Text>
-            <Text style={styles.cellSubText}>{cell.subText}</Text>
+            <Text style={mainTextStyle}>{formatCellMainText(cell)}</Text>
 
-            {shouldShowLevel && (
-                <Text style={styles.cellLevelText}>{formatLevelText(cell.level)}</Text>
+            {shouldShowSubText && (
+                <Text style={styles.cellSubText}>{cell.subText}</Text>
+            )}
+
+            {shouldShowLevel && levelText.length > 0 && (
+                <Text style={[styles.cellLevelText, uvTextColor && { color: uvTextColor }]}> 
+                    {levelText}
+                </Text>
             )}
         </View>
     );
@@ -437,17 +434,48 @@ function formatDateTime(value: string) {
     });
 }
 
-function formatShortDate(value: string) {
-    const date = new Date(value);
+function formatHourLabel(value: string) {
+    const hour = Number(value.split(":")[0]);
 
-    if (Number.isNaN(date.getTime())) {
+    if (Number.isNaN(hour)) {
         return value;
     }
 
-    return date.toLocaleDateString("ko-KR", {
-        month: "2-digit",
-        day: "2-digit",
-    });
+    if (hour === 0) {
+        return "0 AM";
+    }
+
+    if (hour < 12) {
+        return `${hour} AM`;
+    }
+
+    if (hour === 12) {
+        return "12 PM";
+    }
+
+    return `${hour - 12} PM`;
+}
+
+function getUvLevelColor(level: string) {
+    switch (level) {
+        case "LOW":
+        case "낮음":
+            return "#6B7280";
+        case "MODERATE":
+        case "보통":
+            return "#D97706";
+        case "HIGH":
+        case "높음":
+            return "#EA580C";
+        case "VERY_HIGH":
+        case "매우 높음":
+            return "#DC2626";
+        case "EXTREME":
+        case "위험":
+            return "#991B1B";
+        default:
+            return null;
+    }
 }
 
 function getThemeTextColor(theme: string) {
@@ -468,18 +496,10 @@ function getThemeSubTextColor(theme: string) {
 
 function getCardBackgroundColor(theme: string) {
     if (theme === "NIGHT") {
-        return "rgba(31, 41, 55, 0.92)";
+        return "rgba(31, 41, 55, 0.62)";
     }
 
-    return "rgba(255, 255, 255, 0.9)";
-}
-
-function getSoftCardBackgroundColor(theme: string) {
-    if (theme === "NIGHT") {
-        return "rgba(17, 24, 39, 0.88)";
-    }
-
-    return "rgba(255, 255, 255, 0.82)";
+    return "rgba(255, 255, 255, 0.58)";
 }
 
 const styles = StyleSheet.create({
@@ -488,7 +508,7 @@ const styles = StyleSheet.create({
     },
     content: {
         padding: 20,
-        gap: 16,
+        gap: 12,
         paddingBottom: 56,
     },
     centerContainer: {
@@ -568,21 +588,20 @@ const styles = StyleSheet.create({
     },
     dateButtonRow: {
         flexDirection: "row",
+        justifyContent: "center",
         gap: 8,
     },
     dateButton: {
-        flex: 1,
-        paddingVertical: 12,
-        borderRadius: 14,
-        backgroundColor: "#F3F4F6",
+        width: 52,
+        minHeight: 44,
+        paddingVertical: 10,
+        borderRadius: 16,
+        backgroundColor: "transparent",
+        justifyContent: "center",
         alignItems: "center",
-        gap: 4,
     },
     dateButtonActive: {
-        backgroundColor: "#2563EB",
-    },
-    dateButtonEmoji: {
-        fontSize: 18,
+        backgroundColor: "rgba(255, 255, 255, 0.96)",
     },
     dateButtonText: {
         color: "#374151",
@@ -590,43 +609,21 @@ const styles = StyleSheet.create({
         fontSize: 13,
     },
     dateButtonTextActive: {
-        color: "#FFFFFF",
-    },
-    selectorCard: {
-        padding: 14,
-        borderRadius: 18,
-        gap: 14,
-    },
-    selectorTitle: {
-        fontSize: 15,
-        fontWeight: "900",
         color: "#111827",
     },
-    selectorDescription: {
-        marginTop: 4,
-        fontSize: 12,
-        lineHeight: 18,
-        color: "#6B7280",
+    dateSelectorCard: {
+        alignSelf: "center",
+        padding: 4,
+        borderRadius: 18,
     },
     tableCard: {
-        padding: 12,
+        padding: 8,
         borderRadius: 18,
-    },
-    sectionTitle: {
-        fontSize: 20,
-        fontWeight: "900",
-        color: "#111827",
-    },
-    tableHint: {
-        marginTop: 4,
-        marginBottom: 12,
-        fontSize: 12,
-        color: "#6B7280",
     },
     table: {
         borderRadius: 14,
         overflow: "hidden",
-        backgroundColor: "rgba(255, 255, 255, 0.72)",
+        backgroundColor: "rgba(255, 255, 255, 0.28)",
     },
     tableRow: {
         flexDirection: "row",
@@ -635,28 +632,28 @@ const styles = StyleSheet.create({
         backgroundColor: "rgba(255, 255, 255, 0.65)",
     },
     rowHeaderCell: {
-        width: 62,
-        minHeight: 52,
-        padding: 4,
+        width: 52,
+        minHeight: 42,
+        padding: 2,
         justifyContent: "center",
         alignItems: "center",
-        backgroundColor: "rgba(255, 255, 255, 0.65)",
+        backgroundColor: "rgba(255, 255, 255, 0.42)",
     },
     timeHeaderCell: {
-        width: 64,
-        minHeight: 52,
-        padding: 4,
+        width: 54,
+        minHeight: 42,
+        padding: 2,
         justifyContent: "center",
         alignItems: "center",
-        backgroundColor: "rgba(255, 255, 255, 0.65)",
+        backgroundColor: "rgba(255, 255, 255, 0.42)",
     },
     dataCell: {
-        width: 64,
-        minHeight: 58,
-        padding: 4,
+        width: 54,
+        minHeight: 48,
+        padding: 2,
         justifyContent: "center",
         alignItems: "center",
-        backgroundColor: "rgba(255, 255, 255, 0.58)",
+        backgroundColor: "rgba(255, 255, 255, 0.34)",
     },
     currentColumnHeader: {
         backgroundColor: "rgba(219, 234, 254, 0.95)",
@@ -671,14 +668,9 @@ const styles = StyleSheet.create({
         borderRadius: 10,
     },
     headerText: {
-        fontSize: 12,
+        fontSize: 11,
         fontWeight: "900",
         color: "#111827",
-    },
-    dateText: {
-        marginTop: 1,
-        fontSize: 9,
-        color: "#6B7280",
     },
     currentBadge: {
         marginTop: 3,
@@ -692,21 +684,21 @@ const styles = StyleSheet.create({
         overflow: "hidden",
     },
     rowHeaderText: {
-        fontSize: 11,
+        fontSize: 10,
         fontWeight: "900",
         color: "#111827",
         textAlign: "center",
-        lineHeight: 15,
+        lineHeight: 13,
     },
     cellMainText: {
-        fontSize: 18,
+        fontSize: 16,
         fontWeight: "900",
         color: "#111827",
         textAlign: "center",
     },
     cellSubText: {
-        marginTop: 2,
-        fontSize: 10,
+        marginTop: 1,
+        fontSize: 9,
         color: "#6B7280",
         textAlign: "center",
     },
@@ -715,6 +707,9 @@ const styles = StyleSheet.create({
         fontSize: 9,
         color: "#9CA3AF",
         textAlign: "center",
+    },
+    precipitationMainText: {
+        fontSize: 14,
     },
     adviceCard: {
         padding: 18,
@@ -742,14 +737,5 @@ const styles = StyleSheet.create({
         fontSize: 14,
         lineHeight: 22,
         color: "#374151",
-    },
-    backgroundCard: {
-        padding: 16,
-        borderRadius: 18,
-    },
-    value: {
-        fontSize: 18,
-        fontWeight: "900",
-        color: "#111827",
     },
 });

@@ -65,6 +65,7 @@ public class HomeDashboardService {
             String areaNo,
             HomeDateType dateType
     ) {
+        LocalDate today = LocalDate.now();
         LocalDateTime currentTime = LocalDateTime.now();
 
         LocalDate selectedDate = WeatherTimeUtils.calculateSelectedDate(
@@ -78,45 +79,59 @@ public class HomeDashboardService {
 
         List<HomeDashboardSlot> slots = getAllDaySlots(selectedDate);
 
-        ShortForecastBaseTime currentShortForecastBaseTime =
-                WeatherTimeUtils.calculateShortForecastBaseTime(currentTime);
+        ShortForecastBaseTime currentShortForecastTime =
+                WeatherTimeUtils.calculateShortForecastTime(currentTime);
 
-        ShortForecastBaseTime fallbackShortForecastBaseTime =
-                WeatherTimeUtils.calculateSafeFallbackBaseTime(
+        ShortForecastBaseTime fallbackShortForecastTime =
+                WeatherTimeUtils.calculateShortForecastFallbackTime(
                         selectedDate,
                         currentTime,
-                        currentShortForecastBaseTime
+                        currentShortForecastTime
                 );
 
-        String livingWeatherTime =
-                WeatherTimeUtils.toLivingWeatherTime(selectedDate);
+        String currentUvIndexTime =
+                WeatherTimeUtils.calculateUvIndexTime(currentTime);
+
+        String fallbackUvIndexTime =
+                WeatherTimeUtils.calculateUvIndexFallbackTime(today);
 
         ShortForecastResponse currentShortForecast =
                 weatherService.getShortForecast(
-                        currentShortForecastBaseTime.baseDate(),
-                        currentShortForecastBaseTime.baseTime(),
+                        currentShortForecastTime.baseDate(),
+                        currentShortForecastTime.baseTime(),
                         area.gridX(),
                         area.gridY()
                 );
 
         ShortForecastResponse fallbackShortForecast;
 
-        if (currentShortForecastBaseTime.equals(fallbackShortForecastBaseTime)) {
+        if (currentShortForecastTime.equals(fallbackShortForecastTime)) {
             fallbackShortForecast = currentShortForecast;
         } else {
             fallbackShortForecast = weatherService.getShortForecast(
-                    fallbackShortForecastBaseTime.baseDate(),
-                    fallbackShortForecastBaseTime.baseTime(),
+                    fallbackShortForecastTime.baseDate(),
+                    fallbackShortForecastTime.baseTime(),
                     area.gridX(),
                     area.gridY()
             );
         }
 
-        UvIndexResponse uvIndex =
+        UvIndexResponse currentUvIndex =
                 weatherService.getUvIndex(
                         area.areaNo(),
-                        livingWeatherTime
+                        currentUvIndexTime
                 );
+
+        UvIndexResponse fallbackUvIndex;
+
+        if (currentUvIndexTime.equals(fallbackUvIndexTime)) {
+            fallbackUvIndex = currentUvIndex;
+        } else {
+            fallbackUvIndex = weatherService.getUvIndex(
+                    area.areaNo(),
+                    fallbackUvIndexTime
+            );
+        }
 
         HomeTableRowResponse weatherRow = createWeatherRow(
                 slots,
@@ -124,7 +139,7 @@ public class HomeDashboardService {
                 fallbackShortForecast
         );
 
-        HomeTableRowResponse uvIndexRow = createUvIndexRow(slots, uvIndex);
+        HomeTableRowResponse uvIndexRow = createUvIndexRow(slots, currentUvIndex, fallbackUvIndex);
 
         HomeTableRowResponse precipitationRow = createPrecipitationProbabilityRow(
                 slots,
@@ -147,9 +162,10 @@ public class HomeDashboardService {
                 )
         );
 
-        int maxUv = uvIndex.hourlyValues()
-                .values()
+        int maxUv = uvIndexRow.cells()
                 .stream()
+                .map(HomeTableCellResponse::value)
+                .filter(value -> value != null)
                 .mapToInt(Integer::intValue)
                 .max()
                 .orElse(0);
@@ -281,6 +297,20 @@ public class HomeDashboardService {
         );
     }
 
+    private HomeTableCellResponse createWeatherCellWithFallback(
+            HomeDashboardSlot slot,
+            List<ShortForecastItem> currentItems,
+            List<ShortForecastItem> previousItems
+    ) {
+        HomeTableCellResponse currentCell = createWeatherCell(slot, currentItems);
+
+        if (!isEmptyWeatherCell(currentCell)) {
+            return currentCell;
+        }
+
+        return createWeatherCell(slot, previousItems);
+    }
+
     private HomeTableCellResponse createWeatherCell(
             HomeDashboardSlot slot,
             List<ShortForecastItem> items
@@ -332,20 +362,6 @@ public class HomeDashboardService {
         );
     }
 
-    private HomeTableCellResponse createWeatherCellWithFallback(
-            HomeDashboardSlot slot,
-            List<ShortForecastItem> currentItems,
-            List<ShortForecastItem> previousItems
-    ) {
-        HomeTableCellResponse currentCell = createWeatherCell(slot, currentItems);
-
-        if (!isEmptyWeatherCell(currentCell)) {
-            return currentCell;
-        }
-
-        return createWeatherCell(slot, previousItems);
-    }
-
     private boolean isEmptyWeatherCell(HomeTableCellResponse cell) {
         return "-".equals(cell.mainText())
                 && "-".equals(cell.subText())
@@ -387,18 +403,132 @@ public class HomeDashboardService {
 
     private HomeTableRowResponse createUvIndexRow(
             List<HomeDashboardSlot> slots,
-            UvIndexResponse uvIndex
+            UvIndexResponse currentUvIndex,
+            UvIndexResponse fallbackUvIndex
     ) {
         return new HomeTableRowResponse(
                 HomeTableRowType.UV_INDEX,
                 "자외선 지수",
                 slots.stream()
-                        .map(slot -> createUvIndexCell(
+                        .map(slot -> createUvIndexCellWithFallback(
                                 slot,
-                                uvIndex
+                                currentUvIndex,
+                                fallbackUvIndex
                         ))
                         .toList()
         );
+    }
+
+    private HomeTableCellResponse createUvIndexCellWithFallback(
+            HomeDashboardSlot slot,
+            UvIndexResponse currentUvIndex,
+            UvIndexResponse fallbackUvIndex
+    ) {
+        HomeTableCellResponse currentCell = createUvIndexCell(
+                slot,
+                currentUvIndex
+        );
+
+        if (!isEmptyIndexCell(currentCell)) {
+            return currentCell;
+        }
+
+        return createUvIndexCell(
+                slot,
+                fallbackUvIndex
+        );
+    }
+
+    private HomeTableCellResponse createUvIndexCell(
+            HomeDashboardSlot slot,
+            UvIndexResponse uvIndex
+    ) {
+        int hourAfter = calculateHourAfter(
+                uvIndex.baseTime(),
+                slot.date(),
+                slot.time()
+        );
+
+        Integer value = uvIndex.hourlyValues().get(hourAfter);
+
+        if (value == null) {
+            return new HomeTableCellResponse(
+                    slot.date(),
+                    slot.time(),
+                    "-",
+                    "정보 없음",
+                    null,
+                    "UNKNOWN"
+            );
+        }
+
+        String level = classifyUvLevel(value);
+        String levelText = convertUvLevelText(level);
+
+        return new HomeTableCellResponse(
+                slot.date(),
+                slot.time(),
+                String.valueOf(value),
+                levelText,
+                value,
+                level
+        );
+    }
+
+    private boolean isEmptyIndexCell(HomeTableCellResponse cell) {
+        return "-".equals(cell.mainText())
+                && cell.value() == null;
+    }
+
+    private int calculateHourAfter(
+            String baseTime,
+            LocalDate slotDate,
+            String slotTime
+    ) {
+        LocalDateTime baseDateTime = parseLivingWeatherBaseTime(baseTime);
+
+        int hour = Integer.parseInt(slotTime.substring(0, 2));
+
+        LocalDateTime slotDateTime = slotDate.atTime(hour, 0);
+
+        return (int) java.time.Duration.between(
+                baseDateTime,
+                slotDateTime
+        ).toHours();
+    }
+
+    private LocalDateTime parseLivingWeatherBaseTime(String baseTime) {
+        return LocalDateTime.parse(
+                baseTime,
+                java.time.format.DateTimeFormatter.ofPattern("yyyyMMddHH")
+        );
+    }
+
+    private String classifyUvLevel(int value) {
+        if (value <= 2) {
+            return "LOW";
+        }
+        if (value <= 5) {
+            return "MODERATE";
+        }
+        if (value <= 7) {
+            return "HIGH";
+        }
+        if (value <= 10) {
+            return "VERY_HIGH";
+        }
+        return "EXTREME";
+    }
+
+    private String convertUvLevelText(String level) {
+        return switch (level) {
+            case "LOW" -> "낮음";
+            case "MODERATE" -> "보통";
+            case "HIGH" -> "높음";
+            case "VERY_HIGH" -> "매우 높음";
+            case "EXTREME" -> "위험";
+            default -> "정보 없음";
+        };
     }
 
     private HomeTableRowResponse createPrecipitationProbabilityRow(
@@ -506,93 +636,6 @@ public class HomeDashboardService {
         }
 
         return "높음";
-    }
-
-    private HomeTableCellResponse createUvIndexCell(
-            HomeDashboardSlot slot,
-            UvIndexResponse uvIndex
-    ) {
-        int hourAfter = calculateHourAfter(
-                uvIndex.baseTime(),
-                slot.date(),
-                slot.time()
-        );
-
-        Integer value = uvIndex.hourlyValues().get(hourAfter);
-
-        if (value == null) {
-            return new HomeTableCellResponse(
-                    slot.date(),
-                    slot.time(),
-                    "-",
-                    "정보 없음",
-                    null,
-                    "UNKNOWN"
-            );
-        }
-
-        String level = classifyUvLevel(value);
-        String levelText = convertUvLevelText(level);
-
-        return new HomeTableCellResponse(
-                slot.date(),
-                slot.time(),
-                String.valueOf(value),
-                levelText,
-                value,
-                level
-        );
-    }
-
-    private int calculateHourAfter(
-            String baseTime,
-            LocalDate slotDate,
-            String slotTime
-    ) {
-        LocalDateTime baseDateTime = parseLivingWeatherBaseTime(baseTime);
-
-        int hour = Integer.parseInt(slotTime.substring(0, 2));
-
-        LocalDateTime slotDateTime = slotDate.atTime(hour, 0);
-
-        return (int) java.time.Duration.between(
-                baseDateTime,
-                slotDateTime
-        ).toHours();
-    }
-
-    private LocalDateTime parseLivingWeatherBaseTime(String baseTime) {
-        return LocalDateTime.parse(
-                baseTime,
-                java.time.format.DateTimeFormatter.ofPattern("yyyyMMddHH")
-        );
-    }
-
-    private String classifyUvLevel(int value) {
-        if (value <= 2) {
-            return "LOW";
-        }
-        if (value <= 5) {
-            return "MODERATE";
-        }
-        if (value <= 7) {
-            return "HIGH";
-        }
-        if (value <= 10) {
-            return "VERY_HIGH";
-        }
-        return "EXTREME";
-    }
-
-    private String convertUvLevelText(String level) {
-        return switch (level) {
-            case "LOW" -> "낮음";
-            case "MODERATE" -> "보통";
-            case "HIGH" -> "높음";
-            case "VERY_HIGH" -> "매우 높음";
-            case "EXTREME" -> "위험";
-            default -> "정보 없음";
-        };
     }
 
     private Integer parseIntegerSafely(String value) {

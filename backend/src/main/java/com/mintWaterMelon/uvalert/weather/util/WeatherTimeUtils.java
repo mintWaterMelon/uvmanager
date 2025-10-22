@@ -37,7 +37,21 @@ public class WeatherTimeUtils {
         return selectedDate.atStartOfDay().format(LIVING_WEATHER_TIME_FORMATTER);
     }
 
-    public static ShortForecastBaseTime calculateShortForecastBaseTime(
+    public static String calculateUvIndexTime(LocalDateTime now) {
+        int hour = now.getHour();
+        int baseHour = (hour / 3) * 3;
+
+        return now.toLocalDate()
+                .atTime(baseHour, 0)
+                .format(LIVING_WEATHER_TIME_FORMATTER);
+    }
+
+    public static String calculateUvIndexFallbackTime(LocalDate today) {
+        return today.atStartOfDay()
+                .format(LIVING_WEATHER_TIME_FORMATTER);
+    }
+
+    public static ShortForecastBaseTime calculateShortForecastTime(
             LocalDateTime now
     ) {
         LocalDate baseDate = now.toLocalDate();
@@ -81,7 +95,7 @@ public class WeatherTimeUtils {
         return new ShortForecastBaseTime(baseDate, "2300");
     }
 
-    public static ShortForecastBaseTime calculateSafeFallbackBaseTime(
+    public static ShortForecastBaseTime calculateShortForecastFallbackTime(
             LocalDate selectedDate,
             LocalDateTime now,
             ShortForecastBaseTime currentBaseTime
