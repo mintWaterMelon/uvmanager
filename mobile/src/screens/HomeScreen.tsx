@@ -142,7 +142,7 @@ export default function HomeScreen() {
                     </Text>
                 </Pressable>
 
-                <View style={[styles.dateSelectorCard, { backgroundColor: cardBackgroundColor }]}> 
+                <View style={[styles.dateSelectorCard, { backgroundColor: cardBackgroundColor }]}>
                     <View style={styles.dateButtonRow}>
                         <DateButton
                             label="오늘"
@@ -162,18 +162,18 @@ export default function HomeScreen() {
                     </View>
                 </View>
 
-                <View style={[styles.tableCard, { backgroundColor: cardBackgroundColor }]}> 
+                <View style={[styles.tableCard, { backgroundColor: cardBackgroundColor }]}>
                     <DashboardTable dashboard={dashboard} />
                 </View>
 
-                <View style={[styles.adviceCard, { backgroundColor: cardBackgroundColor }]}> 
+                <View style={[styles.adviceCard, { backgroundColor: cardBackgroundColor }]}>
                     <Text style={styles.adviceBadge}>
                         {convertSeverityText(dashboard.advice.severity)}
                     </Text>
-                    <Text style={[styles.adviceTitle, { color: textColor }]}> 
+                    <Text style={[styles.adviceTitle, { color: textColor }]}>
                         {dashboard.advice.title}
                     </Text>
-                    <Text style={[styles.adviceMessage, { color: subTextColor }]}> 
+                    <Text style={[styles.adviceMessage, { color: subTextColor }]}>
                         {dashboard.advice.message}
                     </Text>
                 </View>
@@ -324,7 +324,7 @@ function DashboardTableCell({
             )}
 
             {shouldShowLevel && levelText.length > 0 && (
-                <Text style={[styles.cellLevelText, uvTextColor && { color: uvTextColor }]}> 
+                <Text style={[styles.cellLevelText, uvTextColor && { color: uvTextColor }]}>
                     {levelText}
                 </Text>
             )}
