@@ -409,7 +409,7 @@ const styles = StyleSheet.create({
         borderRadius: 14,
         color: "#111827",
         fontSize: 14,
-        lineHeight: 28,
+        lineHeight: 43,
         fontWeight: "900",
         textAlign: "center",
         overflow: "hidden",

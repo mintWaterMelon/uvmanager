@@ -12,7 +12,7 @@ export default function HowToUseScreen() {
                 <View style={styles.headerRow}>
                     <Text style={styles.title}>사용방법</Text>
 
-                    <Pressable style={styles.backButton} onPress={() => router.back()}>
+                    <Pressable style={styles.backButton} onPress={() => router.replace("/settings")}>
                         <Text style={styles.backButtonText}>뒤로</Text>
                     </Pressable>
                 </View>

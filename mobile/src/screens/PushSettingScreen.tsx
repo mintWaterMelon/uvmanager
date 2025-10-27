@@ -9,6 +9,7 @@ import {
     TextInput,
     View,
 } from "react-native";
+import { useRouter } from "expo-router";
 
 import {
     getPushSettings,
@@ -18,6 +19,8 @@ import ScreenContainer from "../components/ScreenContainer";
 import { getApiErrorMessage, logApiError } from "../api/apiErrorMessage";
 
 export default function PushSettingScreen() {
+    const router = useRouter();
+
     const [uvAlertEnabled, setUvAlertEnabled] = useState(true);
     const [uvAlertThreshold, setUvAlertThreshold] = useState("8");
     const [dustAlertEnabled, setDustAlertEnabled] = useState(false);
@@ -110,7 +113,13 @@ export default function PushSettingScreen() {
     return (
         <ScreenContainer>
             <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-                <Text style={styles.title}>푸시 설정</Text>
+                <View style={styles.headerRow}>
+                    <Text style={styles.title}>푸시 설정</Text>
+
+                    <Pressable style={styles.backButton} onPress={() => router.replace("/settings")}>
+                        <Text style={styles.backButtonText}>뒤로</Text>
+                    </Pressable>
+                </View>
 
                 <View style={styles.card}>
                     <View style={styles.switchRow}>
@@ -253,11 +262,26 @@ const styles = StyleSheet.create({
         fontSize: 14,
         color: "#555555",
     },
+    headerRow: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
+    },
     title: {
         fontSize: 28,
         fontWeight: "900",
         color: "#111827",
-        marginBottom: 8,
+    },
+    backButton: {
+        backgroundColor: "#111827",
+        paddingVertical: 8,
+        paddingHorizontal: 12,
+        borderRadius: 10,
+    },
+    backButtonText: {
+        color: "#FFFFFF",
+        fontWeight: "800",
+        fontSize: 12,
     },
     card: {
         backgroundColor: "#FFFFFF",

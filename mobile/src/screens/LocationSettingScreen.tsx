@@ -8,7 +8,7 @@ import {
     TextInput,
     View,
 } from "react-native";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 
 import { AreaResponse, searchAreas } from "../api/areaApi";
 import { getSettings, updateSettings } from "../api/settingApi";
@@ -17,6 +17,7 @@ import { getApiErrorMessage, logApiError } from "../api/apiErrorMessage";
 
 export default function LocationSettingScreen() {
     const router = useRouter();
+    const { from } = useLocalSearchParams<{ from?: string }>();
 
     const [defaultAreaNo, setDefaultAreaNo] = useState("1100000000");
     const [defaultLocationName, setDefaultLocationName] = useState("서울특별시");
@@ -102,6 +103,15 @@ export default function LocationSettingScreen() {
         }
     }
 
+    function handleBack() {
+        if (from === "settings") {
+            router.replace("/settings");
+            return;
+        }
+
+        router.replace("/");
+    }
+
     if (loading) {
         return (
             <ScreenContainer>
@@ -119,7 +129,7 @@ export default function LocationSettingScreen() {
                 <View style={styles.headerRow}>
                     <Text style={styles.title}>위치 설정</Text>
 
-                    <Pressable style={styles.backButton} onPress={() => router.back()}>
+                    <Pressable style={styles.backButton} onPress={handleBack}>
                         <Text style={styles.backButtonText}>뒤로</Text>
                     </Pressable>
                 </View>

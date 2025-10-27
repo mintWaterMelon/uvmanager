@@ -12,7 +12,7 @@ export default function LicenseScreen() {
                 <View style={styles.headerRow}>
                     <Text style={styles.title}>라이센스</Text>
 
-                    <Pressable style={styles.backButton} onPress={() => router.back()}>
+                    <Pressable style={styles.backButton} onPress={() => router.replace("/settings")}>
                         <Text style={styles.backButtonText}>뒤로</Text>
                     </Pressable>
                 </View>
