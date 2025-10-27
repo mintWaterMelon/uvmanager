@@ -23,7 +23,6 @@ export default function PushSettingScreen() {
 
     const [uvAlertEnabled, setUvAlertEnabled] = useState(true);
     const [uvAlertThreshold, setUvAlertThreshold] = useState("8");
-    const [dustAlertEnabled, setDustAlertEnabled] = useState(false);
     const [alertTime, setAlertTime] = useState("08:00");
 
     const [loading, setLoading] = useState(true);
@@ -45,7 +44,6 @@ export default function PushSettingScreen() {
 
             setUvAlertEnabled(settings.uvAlertEnabled);
             setUvAlertThreshold(String(settings.uvAlertThreshold));
-            setDustAlertEnabled(settings.dustAlertEnabled);
             setAlertTime(formatTime(settings.alertTime));
         } catch (error) {
             logApiError(error);
@@ -81,13 +79,12 @@ export default function PushSettingScreen() {
             const updated = await updatePushSettings({
                 uvAlertEnabled,
                 uvAlertThreshold: threshold,
-                dustAlertEnabled,
+                dustAlertEnabled: false,
                 alertTime,
             });
 
             setUvAlertEnabled(updated.uvAlertEnabled);
             setUvAlertThreshold(String(updated.uvAlertThreshold));
-            setDustAlertEnabled(updated.dustAlertEnabled);
             setAlertTime(formatTime(updated.alertTime));
 
             setMessage("푸시 설정이 저장되었습니다.");
@@ -159,21 +156,6 @@ export default function PushSettingScreen() {
                     />
                 </View>
 
-                <View style={styles.card}>
-                    <View style={styles.switchRow}>
-                        <View style={styles.switchTextBox}>
-                            <Text style={styles.sectionTitle}>미세먼지 알림</Text>
-                            <Text style={styles.description}>
-                                미세먼지 또는 대기 상태가 좋지 않을 때 알림을 받을 수 있습니다.
-                            </Text>
-                        </View>
-
-                        <Switch
-                            value={dustAlertEnabled}
-                            onValueChange={setDustAlertEnabled}
-                        />
-                    </View>
-                </View>
 
                 <View style={styles.card}>
                     <Text style={styles.sectionTitle}>알림 시간</Text>

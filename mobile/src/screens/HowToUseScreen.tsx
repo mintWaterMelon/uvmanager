@@ -21,8 +21,8 @@ export default function HowToUseScreen() {
                     <Text style={styles.stepNumber}>1</Text>
                     <Text style={styles.sectionTitle}>홈 화면 확인하기</Text>
                     <Text style={styles.paragraph}>
-                        홈 화면에서는 현재 시간, 설정된 위치, 날씨 및 온도, 자외선 지수,
-                        대기정체지수를 시간대별로 확인할 수 있습니다.
+                        홈 화면에서는 현재 시간, 설정된 위치, 날씨 및 온도, 자외선 지수를
+                        시간대별로 확인할 수 있습니다.
                     </Text>
                     <Text style={styles.paragraph}>
                         현재 시간에 해당하는 열은 굵은 테두리로 표시됩니다.
@@ -65,8 +65,7 @@ export default function HowToUseScreen() {
                     <Text style={styles.stepNumber}>5</Text>
                     <Text style={styles.sectionTitle}>푸시 설정하기</Text>
                     <Text style={styles.paragraph}>
-                        푸시 설정 화면에서 자외선 알림, 미세먼지 알림, 알림 시간을 설정할 수
-                        있습니다.
+                        푸시 설정 화면에서 자외선 알림과 알림 시간을 설정할 수 있습니다.
                     </Text>
                     <Text style={styles.paragraph}>
                         현재 단계에서는 설정 저장 기능을 중심으로 구현되어 있으며, 실제 푸시
