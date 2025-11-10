@@ -1,0 +1,2 @@
+### 단기예보 수치 확인(지역 좌표, 현재 날짜, 현재 시간 입력)
+GET http://localhost:8080/api/weather/short-forecast?nx=60&ny=127&baseDate=20260606&baseTime=0200

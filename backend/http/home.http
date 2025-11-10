@@ -1,2 +1,2 @@
 ### home 화면 데이터
-GET http://localhost:8080/api/home?areaNo=1100000000
+GET http://localhost:8080/api/home/dashboard?areaNo=2600000000&dateType=DAY_AFTER_TOMORROW
