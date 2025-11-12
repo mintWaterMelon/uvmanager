@@ -23,37 +23,20 @@ public class HomeDashboardService {
     private final WeatherService weatherService;
     private final HomeBackgroundService homeBackgroundService;
     private final HomeAdviceService homeAdviceService;
+    private final HomeTableSummaryCalculator homeTableSummaryCalculator;
 
     public HomeDashboardService(
             AreaService areaService,
             WeatherService weatherService,
             HomeBackgroundService homeBackgroundService,
-            HomeAdviceService homeAdviceService
+            HomeAdviceService homeAdviceService,
+            HomeTableSummaryCalculator homeTableSummaryCalculator
     ) {
         this.areaService = areaService;
         this.weatherService = weatherService;
         this.homeBackgroundService = homeBackgroundService;
         this.homeAdviceService = homeAdviceService;
-    }
-
-    private String findRepresentativeWeather(HomeTableRowResponse weatherRow) {
-        return weatherRow.cells()
-                .stream()
-                .filter(cell -> cell.mainText() != null)
-                .filter(cell -> !cell.mainText().isBlank())
-                .filter(cell -> !"-".equals(cell.mainText()))
-                .findFirst()
-                .map(HomeTableCellResponse::mainText)
-                .orElse("맑음");
-    }
-
-    private Integer findRepresentativeTemperature(HomeTableRowResponse weatherRow) {
-        return weatherRow.cells()
-                .stream()
-                .map(HomeTableCellResponse::value)
-                .filter(value -> value != null)
-                .findFirst()
-                .orElse(null);
+        this.homeTableSummaryCalculator = homeTableSummaryCalculator;
     }
 
     private boolean isNight(LocalDateTime currentTime) {
@@ -162,24 +145,16 @@ public class HomeDashboardService {
                 )
         );
 
-        int maxUv = uvIndexRow.cells()
-                .stream()
-                .map(HomeTableCellResponse::value)
-                .filter(value -> value != null)
-                .mapToInt(Integer::intValue)
-                .max()
-                .orElse(0);
+        int maxUv = homeTableSummaryCalculator.findMaxValue(uvIndexRow);
 
-        int maxPrecipitationProbability = precipitationRow.cells()
-                .stream()
-                .map(HomeTableCellResponse::value)
-                .filter(value -> value != null)
-                .mapToInt(Integer::intValue)
-                .max()
-                .orElse(0);
+        int maxPrecipitationProbability =
+                homeTableSummaryCalculator.findMaxValue(precipitationRow);
 
-        String representativeWeather = findRepresentativeWeather(weatherRow);
-        Integer representativeTemperature = findRepresentativeTemperature(weatherRow);
+        String representativeWeather =
+                homeTableSummaryCalculator.findRepresentativeWeather(weatherRow);
+
+        Integer representativeTemperature =
+                homeTableSummaryCalculator.findRepresentativeTemperature(weatherRow);
 
         HomeMode currentMode = isNight(currentTime) ? HomeMode.NIGHT : HomeMode.DAY;
 
