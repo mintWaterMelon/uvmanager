@@ -1,179 +1,240 @@
 # UV Alert
 
-UV Alert는 기상청 공공데이터를 활용하여 사용자의 위치를 기준으로 날씨, 온도, 자외선지수, 미세먼지 관련 정보를 확인할 수 있는 모바일 앱 프로젝트입니다.
+UV Alert는 기상청 공공데이터를 활용하여 사용자가 선택한 지역의 날씨, 온도, 자외선지수, 강수확률 정보를 제공하는 모바일 앱 프로젝트입니다.
 
-백엔드는 Java Spring Boot로 구현하고, 모바일 앱은 Expo React Native로 구현합니다.
+백엔드는 Java 17과 Spring Boot 3 기반 REST API로 구현하고, 모바일 앱은 Expo React Native 기반으로 구현합니다.
 
 ---
 
-## 1. Project Introduction
+## 1. 프로젝트 소개
 
-이 프로젝트는 사용자가 설정한 지역의 시간대별 날씨 정보와 자외선 정보를 제공하는 앱입니다.
+UV Alert는 사용자가 선택한 지역을 기준으로 오늘, 내일, 모레의 시간대별 날씨와 자외선 정보를 확인할 수 있는 앱입니다.
 
-홈 화면에서는 오늘, 내일, 모레의 정보를 낮/밤 모드로 확인할 수 있습니다.
+홈 화면에서는 다음 정보를 제공합니다.
+
+- 현재 시간과 선택 지역
+- 오늘 / 내일 / 모레 날짜 선택
+- 시간대별 날씨 및 온도
+- 시간대별 자외선지수
+- 시간대별 강수확률
+- 날씨, 밤/낮, 자외선 위험도에 따른 배경 테마
+- 현재 상황에 맞는 사용자 안내 메시지
 
 주요 데이터는 기상청 공공데이터 API를 통해 조회합니다.
 
 ---
 
-## 2. Main Features
+## 2. 주요 기능
 
-### Home
+### 홈 대시보드
 
-- 현재 시간 표시
-- 현재 설정 위치 표시
-- 오늘 / 내일 / 모레 선택
-- 낮 / 밤 모드 전환
-- 시간대별 대시보드 표시
-  - 날씨 및 온도
-  - 자외선 지수
-  - 미세먼지 표시
+- 지역과 날짜 기준 홈 대시보드 조회
+- 오늘 / 내일 / 모레 데이터 조회
+- 시간대별 날씨 및 온도 표시
+- 시간대별 자외선지수 표시
+- 시간대별 강수확률 표시
 - 현재 시간대 강조
-- 날씨, 자외선, 대기 상태에 따른 배경 테마 변경
-- 상황별 조언 박스 표시
+- 대표 날씨, 대표 기온, 최대 자외선지수, 최대 강수확률 계산
+- 조건별 홈 배경 테마 결정
+- 자외선, 날씨, 강수확률, 밤/낮 조건에 따른 안내 메시지 생성
 
-### UV Information
+### 지역 검색
 
-- SPF와 PA 설명
-- 자외선지수 단계 설명
-- 올바른 선크림 사용법 안내
-- 자외선 보호 체크리스트 제공
+- 지역명 키워드 검색
+- 기상청 단기예보 격자 좌표 제공
+- 기본 지역 코드 기반 조회 지원
 
-### Settings
+### 푸시 설정
 
-- 위치 설정
-- 푸시 설정
-- 사용방법
-- 라이센스 정보
-
-### Location Settings
-
-- 지역명 검색
-- 행정구역 코드 검색
-- 선택한 지역을 기본 위치로 저장
-- 단기예보 격자 좌표 사용
-
-### Push Settings
-
-- 자외선 알림 ON/OFF
+- 자외선 알림 활성화 여부 설정
 - 자외선 알림 기준값 설정
-- 미세먼지 알림 ON/OFF
 - 알림 시간 설정
+- 현재 저장된 푸시 설정 조회 및 수정
 
-> 실제 푸시 발송 기능은 TBD입니다.
+> 실제 푸시 발송 기능은 추후 구현 예정입니다.
+
+### 모바일 앱
+
+- Expo React Native 기반 화면 구성
+- 홈 화면, 위치 설정, 푸시 설정, 라이선스 화면 구성
+- 백엔드 REST API 연동 구조 적용
 
 ---
 
-## 3. Technology Stack
+## 3. 기술 스택
 
 ### Backend
 
-| Category | Technology |
+| 구분 | 기술 |
 |---|---|
 | Language | Java 17 |
-| Framework | Spring Boot 3.5.14 |
+| Framework | Spring Boot 3.5.x |
 | Build Tool | Gradle |
 | Build Script | Groovy |
 | Packaging | Jar |
-| Database | TBD |
-| ORM | Spring Data JPA 예정 |
-| Authentication | Spring Security + JWT 예정 |
-| API Documentation | Swagger / OpenAPI 예정 |
-| Test | JUnit 5, Mockito 예정 |
-| Deployment | TBD |
-| CI/CD | GitHub Actions 예정 |
+| ORM | Spring Data JPA / Hibernate |
+| Database | H2, PostgreSQL |
+| API Documentation | Swagger / OpenAPI, springdoc-openapi |
+| Test | JUnit 5, AssertJ, Mockito, Spring MVC Test, Data JPA Test |
+| CI | GitHub Actions |
+| External API | 기상청 공공데이터 API |
 
 ### Mobile
 
-- Expo
-- React Native
-- TypeScript
-- Expo Router
-- React Native Safe Area Context
+| 구분 | 기술 |
+|---|---|
+| Framework | Expo |
+| UI | React Native |
+| Language | TypeScript |
+| Routing | Expo Router |
 
-### External API
+### 추후 도입 예정
 
-- 기상청 자외선지수 API
-- 기상청 단기예보 조회서비스
-- 기상청 대기정체지수 API
-
----
-
-## 4. Architecture Diagram
-
-TBD
-
-예정 아키텍처는 다음과 같습니다.
-
-```text
-Client
-  ↓
-Spring Boot REST API Server
-  ↓
-Service Layer
-  ↓
-Repository Layer
-  ↓
-Database
-
-Spring Boot Scheduler
-  ↓
-External UV Index API
-  ↓
-Notification Service
-```
-
-추후 프로젝트 구조가 확정되면 아키텍처 다이어그램을 추가할 예정입니다.
+| 구분 | 예정 기술 |
+|---|---|
+| DB Migration | Flyway |
+| Cache | Redis |
+| Deployment | Docker, Render 또는 AWS EC2/RDS |
+| CD | GitHub Actions 기반 자동 배포 |
+| Authentication | Spring Security + JWT, 로그인 기능 추가 시 도입 |
 
 ---
 
-## 5. ERD
-
-TBD
-
-예정 엔티티는 다음과 같습니다.
+## 4. 프로젝트 구조
 
 ```text
-User
-NotificationSetting
-Location
-UvIndex
+uvalert
+├─ backend
+│  ├─ src/main/java/com/mintWaterMelon/uvalert
+│  │  ├─ area
+│  │  ├─ home
+│  │  ├─ push
+│  │  ├─ setting
+│  │  └─ weather
+│  ├─ src/main/resources
+│  └─ src/test
+├─ mobile
+├─ .github/workflows
+└─ docker-compose.yml
 ```
 
-예상 관계는 다음과 같습니다.
+### Backend 패키지 역할
 
-```text
-User 1 ─── 1 NotificationSetting
-Location 1 ─── N NotificationSetting
-Location 1 ─── N UvIndex
-```
-
-추후 데이터베이스 설계가 확정되면 ERD 이미지를 추가할 예정입니다.
+| 패키지 | 역할 |
+|---|---|
+| `area` | 지역 검색, 기상청 격자 좌표 관리 |
+| `home` | 홈 대시보드, 배경, 안내 메시지, 테이블 응답 생성 |
+| `push` | 푸시 알림 설정 조회 및 수정 |
+| `setting` | 앱 설정 관리 |
+| `weather` | 기상청 자외선지수 API, 단기예보 API 연동 |
 
 ---
 
-## 6. API Documentation Link
+## 5. API 문서
 
-TBD
+Swagger UI를 통해 API 목록과 요청/응답 구조를 확인할 수 있습니다.
 
-Swagger / OpenAPI 문서화 적용 후 아래 위치에 API 문서 링크를 추가할 예정입니다.
+### Local
+
+- Swagger UI: <http://localhost:8080/swagger-ui/index.html>
+- OpenAPI JSON: <http://localhost:8080/v3/api-docs>
+
+### 주요 API
+
+| 구분 | Method | Endpoint | 설명 |
+|---|---|---|---|
+| 홈 | GET | `/api/home/dashboard` | 지역과 날짜 기준 홈 대시보드 조회 |
+| 지역 | GET | `/api/areas` | 지역 목록 및 키워드 검색 |
+| 푸시 설정 | GET | `/api/push-settings` | 푸시 설정 조회 |
+| 푸시 설정 | PUT | `/api/push-settings` | 푸시 설정 수정 |
+
+### 홈 대시보드 요청 예시
 
 ```text
-http://localhost:8080/swagger-ui/index.html
+GET /api/home/dashboard?areaNo=1100000000&dateType=TODAY
+```
+
+`dateType`은 다음 값을 사용할 수 있습니다.
+
+```text
+TODAY
+TOMORROW
+DAY_AFTER_TOMORROW
 ```
 
 ---
 
-## 7. Local Execution Method
+## 6. 환경별 설정
+
+Spring Profile을 사용하여 실행 환경별 설정을 분리했습니다.
+
+| Profile | 설정 파일 | 용도 |
+|---|---|---|
+| local | `application-local.properties` | 로컬 개발 환경 |
+| test | `application-test.properties` | 테스트 실행 환경 |
+| prod | `application-prod.properties` | 운영 배포 환경 |
+
+### local
+
+- 로컬 개발 서버 실행용 설정
+- PostgreSQL 또는 H2 사용
+- `ddl-auto=update`
+- SQL 로그 출력
+- 기상청 API Key는 환경변수로 주입
+
+### test
+
+- 테스트 실행 전용 설정
+- H2 인메모리 DB 사용
+- `ddl-auto=create-drop`
+- 테스트용 API Key 사용
+
+### prod
+
+- 운영 배포 전용 설정
+- DB 접속 정보와 기상청 API Key는 환경변수로 주입
+- `ddl-auto=validate`
+- DB 스키마 변경은 추후 Flyway로 관리 예정
+
+---
+
+## 7. 환경변수
+
+민감한 정보는 코드에 직접 작성하지 않고 환경변수로 관리합니다.
+
+### local
+
+| 변수명 | 설명 |
+|---|---|
+| `KMA_SERVICE_KEY` | 기상청 공공데이터 API 인증키 |
+
+### prod
+
+| 변수명 | 설명 |
+|---|---|
+| `DATABASE_URL` | 운영 DB JDBC URL |
+| `DATABASE_USERNAME` | 운영 DB 사용자명 |
+| `DATABASE_PASSWORD` | 운영 DB 비밀번호 |
+| `KMA_SERVICE_KEY` | 기상청 공공데이터 API 인증키 |
+
+Windows PowerShell 예시:
+
+```powershell
+$env:KMA_SERVICE_KEY="본인_기상청_API_KEY"
+```
+
+---
+
+## 8. 로컬 실행 방법
 
 ### 1. Repository Clone
 
 ```bash
-git clone TBD
-cd uv-alert
+git clone <repository-url>
+cd uvalert
 ```
 
-### 2. Java Version Check
+### 2. Java 버전 확인
 
 이 프로젝트는 Java 17을 사용합니다.
 
@@ -181,41 +242,48 @@ cd uv-alert
 java -version
 ```
 
-예상 버전:
+### 3. 로컬 PostgreSQL 실행
 
-```text
-java 17
-```
-
-### 3. Build
-
-Windows 환경:
+로컬 개발 DB는 Docker Compose로 실행할 수 있습니다.
 
 ```bash
-gradlew.bat build
+docker compose up -d
 ```
 
-Mac / Linux 환경:
+PostgreSQL 접속 정보:
+
+| 항목 | 값 |
+|---|---|
+| Host | localhost |
+| Port | 5432 |
+| Database | uvalert |
+| Username | uvalert |
+| Password | uvalert |
+| JDBC URL | `jdbc:postgresql://localhost:5432/uvalert` |
+
+컨테이너 확인:
 
 ```bash
-./gradlew build
+docker ps
 ```
 
-### 4. Run
+### 4. 백엔드 서버 실행
 
-Windows 환경:
+Windows PowerShell:
 
-```bash
-gradlew.bat bootRun
+```powershell
+cd backend
+$env:KMA_SERVICE_KEY="본인_기상청_API_KEY"
+.\gradlew.bat bootRun
 ```
 
-Mac / Linux 환경:
+Mac / Linux:
 
 ```bash
+cd backend
+export KMA_SERVICE_KEY="본인_기상청_API_KEY"
 ./gradlew bootRun
 ```
-
-### 5. Server Check
 
 서버 실행 후 아래 주소로 접속합니다.
 
@@ -223,175 +291,211 @@ Mac / Linux 환경:
 http://localhost:8080
 ```
 
-Health Check API는 추후 추가 예정입니다.
+Swagger UI:
 
 ```text
-GET /health
+http://localhost:8080/swagger-ui/index.html
 ```
 
 ---
 
-## 8. Setting Environment Variables
+## 9. 테스트
 
-TBD
+JUnit 5, AssertJ, Mockito, Spring MVC Test, Data JPA Test를 사용하여 테스트를 구성했습니다.
 
-공공 API Key, 데이터베이스 접속 정보, JWT Secret 등 민감한 정보는 환경 변수로 관리할 예정입니다.
+### 테스트 실행
 
-예정 환경 변수는 다음과 같습니다.
+Windows PowerShell:
+
+```powershell
+cd backend
+.\gradlew.bat clean test
+```
+
+Mac / Linux:
+
+```bash
+cd backend
+./gradlew clean test
+```
+
+### 테스트 구성
+
+| 테스트 | 설명 |
+|---|---|
+| `HomeTableSummaryCalculatorTest` | 홈 테이블의 최댓값, 대표 날씨, 대표 기온 계산 검증 |
+| `HomeAdviceServiceTest` | 자외선, 날씨, 강수확률, 밤/낮 조건에 따른 안내 메시지 검증 |
+| `HomeBackgroundServiceTest` | 홈 화면 배경 테마 결정 로직 검증 |
+| `AreaControllerTest` | 지역 검색 API Controller 테스트 |
+| `PushSettingControllerTest` | 푸시 설정 API Controller 테스트 |
+| `PushSettingServiceTest` | 푸시 설정 비즈니스 로직 단위 테스트 |
+| `PushSettingRepositoryTest` | JPA Repository 저장, 조회, 수정, 삭제 테스트 |
+
+### 테스트 전략
+
+- Service 로직은 순수 단위 테스트로 검증합니다.
+- Controller는 `@WebMvcTest`와 `@MockitoBean`으로 API 요청/응답을 검증합니다.
+- Repository는 `@DataJpaTest`로 JPA 저장/조회 동작을 검증합니다.
+- 테스트 환경에서는 H2 인메모리 DB를 사용합니다.
+
+---
+
+## 10. CI
+
+GitHub Actions를 사용하여 백엔드 테스트를 자동화했습니다.
+
+Workflow 파일 위치:
 
 ```text
-UV_API_KEY=TBD
-UV_API_BASE_URL=TBD
-
-DB_URL=TBD
-DB_USERNAME=TBD
-DB_PASSWORD=TBD
-
-JWT_SECRET=TBD
-JWT_EXPIRATION=TBD
+.github/workflows/backend-ci.yml
 ```
 
-실제 API Key나 비밀번호는 GitHub에 업로드하지 않습니다.
+### 실행 조건
 
-추후 `.env` 또는 `application-local.yml` 설정 방식을 정리할 예정입니다.
+- `main` 브랜치 push
+- `develop` 브랜치 push
+- `main` / `develop` 대상 Pull Request
+- 수동 실행
 
----
-
-## 9. Test Method
-
-TBD
-
-테스트 코드는 JUnit 5와 Mockito를 사용하여 작성할 예정입니다.
-
-전체 테스트 실행:
-
-Windows 환경:
-
-```bash
-gradlew.bat test
-```
-
-Mac / Linux 환경:
-
-```bash
-./gradlew test
-```
-
-예정 테스트 항목:
-
-- UV 지수 등급 분류 테스트
-- 회원가입 테스트
-- 로그인 테스트
-- 알림 설정 저장 테스트
-- 외부 API Client 테스트
-- Scheduler 동작 테스트
-
----
-
-## 10. Distribution Method
-
-TBD
-
-추후 Docker와 클라우드 서버를 활용하여 배포할 예정입니다.
-
-예정 배포 방식:
+### 실행 작업
 
 ```text
-1. Spring Boot 애플리케이션 Jar 빌드
-2. Docker 이미지 생성
-3. 서버에 Docker 컨테이너 실행
-4. 환경 변수 설정
-5. 배포 서버에서 API 동작 확인
+Checkout source code
+→ Set up JDK 17
+→ Set up Gradle
+→ Grant execute permission for Gradle wrapper
+→ backend 기준 ./gradlew clean test 실행
 ```
-
-예정 Docker 실행 흐름:
-
-```bash
-./gradlew build
-docker build -t uv-alert .
-docker run -p 8080:8080 uv-alert
-```
-
-CI/CD는 GitHub Actions를 사용하여 자동화할 예정입니다.
 
 ---
 
-## 11. What I Learned Through This Project
+## 11. 데이터베이스
 
-이 프로젝트를 통해 다음 내용을 학습하고 정리하는 것을 목표로 합니다.
+현재 로컬 개발과 테스트는 다음 방식으로 분리합니다.
 
-### Spring Boot 기본 구조
+| 환경 | DB | 목적 |
+|---|---|---|
+| local | PostgreSQL 또는 H2 | 로컬 서버 실행 |
+| test | H2 in-memory | 테스트 실행 |
+| prod | PostgreSQL | 운영 배포 예정 |
 
-- Spring Boot 프로젝트 생성 방법
-- Gradle 기반 프로젝트 구조
+운영 환경에서는 `ddl-auto=validate`를 사용하고, 추후 Flyway를 도입하여 DB 변경 이력을 SQL migration 파일로 관리할 예정입니다.
+
+---
+
+## 12. 외부 API
+
+현재 백엔드는 기상청 공공데이터 API를 사용합니다.
+
+| API | 용도 |
+|---|---|
+| Living Weather Index API | 자외선지수 조회 |
+| Short Forecast API | 단기예보, 날씨, 온도, 강수확률 조회 |
+
+공통 API 주소와 path는 `application.properties`에 두고, API Key는 환경변수로 분리합니다.
+
+---
+
+## 13. 배포 계획
+
+아직 운영 배포는 진행 전입니다.
+
+예정 배포 흐름은 다음과 같습니다.
+
+```text
+1. Dockerfile 작성
+2. Spring Boot Jar 빌드
+3. Docker 이미지 생성
+4. Render 또는 AWS EC2에 배포
+5. PostgreSQL 운영 DB 연결
+6. GitHub Actions로 자동 배포 구성
+```
+
+1차 배포는 Render 또는 Fly.io 같은 간단한 PaaS를 사용하고, 이후 AWS EC2/RDS 구조로 확장할 계획입니다.
+
+---
+
+## 14. 향후 개선 계획
+
+- Flyway를 통한 DB migration 관리
+- Redis 캐시 도입
+- 기상청 API 응답 캐싱
+- 실제 푸시 알림 발송 기능 구현
+- Dockerfile 추가
+- Render 또는 AWS 배포
+- GitHub Actions CD 구성
+- Testcontainers 기반 PostgreSQL 통합 테스트
+- 로그인 기능 필요 시 Spring Security + JWT 도입
+
+---
+
+## 15. 학습 및 구현 포인트
+
+이 프로젝트를 통해 다음 내용을 학습하고 적용합니다.
+
+### Spring Boot
+
 - Controller, Service, Repository 계층 분리
-- REST API 설계 방식
+- DTO 기반 요청/응답 설계
+- Profile 기반 환경 설정 분리
+- 외부 API Client 구성
 
-### 외부 API 연동
+### JPA / Hibernate
 
-- 공공 API 요청 방식
-- API Key 관리 방법
-- 외부 API 응답을 내부 DTO로 변환하는 방법
-- 외부 API 장애 상황 처리 방법
-
-### 데이터베이스와 JPA
-
-- Entity 설계
-- Repository 사용
-- 사용자와 알림 설정 간의 관계 설계
-- 데이터 저장과 조회 흐름
-
-### 인증과 보안
-
-- Spring Security 기본 구조
-- JWT 기반 로그인 처리
-- 인증이 필요한 API 보호
-- 비밀번호 암호화
-
-### 스케줄링
-
-- `@Scheduled` 사용 방법
-- 정해진 시간마다 UV 지수 확인
-- 조건에 따라 알림 발송 처리
+- Entity와 Repository 구성
+- H2와 PostgreSQL 환경 분리
+- `ddl-auto` 전략 이해
+- 운영 환경에서 `validate` 전략 사용 준비
 
 ### 테스트
 
-- 단위 테스트와 통합 테스트의 차이
-- JUnit 5 사용법
-- Mockito를 이용한 Mock 테스트
-- 외부 API 의존성을 분리하는 방법
+- JUnit 5 기반 단위 테스트
+- Mockito를 이용한 의존성 분리
+- `@WebMvcTest` 기반 Controller 테스트
+- `@DataJpaTest` 기반 Repository 테스트
+- GitHub Actions에서 자동 테스트 실행
 
-### 배포
+### 문서화
 
-- Jar 파일 빌드
-- Docker 이미지 생성
-- 환경 변수 기반 설정 관리
-- GitHub Actions를 활용한 CI/CD 자동화
+- Swagger/OpenAPI 적용
+- API 요청/응답 문서화
+- README 기반 실행 방법, 테스트 방법 정리
+
+### 배포 준비
+
+- Docker Compose를 이용한 로컬 PostgreSQL 실행
+- 환경변수 기반 민감 정보 관리
+- CI와 CD의 차이 이해
+- 배포 환경별 설정 분리
 
 ---
 
-## Project Status
+## 16. 프로젝트 상태
 
-현재 상태:
+현재 완료된 작업:
 
 ```text
-Project Created
-Initial Spring Boot Setup
-Git Repository Connected
-Push Not Yet Completed
+Spring Boot 백엔드 기본 구조 구성
+Expo React Native 모바일 앱 구조 구성
+기상청 자외선지수 API 연동
+기상청 단기예보 API 연동
+지역 검색 API 구현
+홈 대시보드 API 구현
+푸시 설정 API 구현
+local / test / prod 설정 분리
+Swagger / OpenAPI 문서화
+JUnit 5 기반 테스트 코드 작성
+GitHub Actions CI 구성
+로컬 PostgreSQL 실행 준비
 ```
 
-진행 예정:
+진행 예정 작업:
 
 ```text
-1. Initial Commit
-2. Health Check API 구현
-3. 기본 패키지 구조 정리
-4. UV Index API 설계
-5. 공공 API 연동
-6. DB 연동
-7. 알림 설정 기능 구현
-8. 인증 기능 구현
-9. 테스트 코드 작성
-10. 배포
+Flyway 도입
+Redis 캐시 도입
+Dockerfile 작성
+운영 배포
+GitHub Actions CD 구성
+실제 푸시 알림 발송 구현
 ```
