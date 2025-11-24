@@ -18,7 +18,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(PushSettingController.class)
 class PushSettingControllerTest {
@@ -35,7 +36,6 @@ class PushSettingControllerTest {
     @Test
     @DisplayName("푸시 설정을 조회한다")
     void getPushSettings() throws Exception {
-        // given
         PushSettingResponse response = new PushSettingResponse(
                 true,
                 8,
@@ -46,7 +46,6 @@ class PushSettingControllerTest {
         BDDMockito.given(pushSettingService.getPushSettings())
                 .willReturn(response);
 
-        // when & then
         mockMvc.perform(get("/api/push-settings"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.uvAlertEnabled").value(true))
@@ -58,14 +57,12 @@ class PushSettingControllerTest {
     @Test
     @DisplayName("푸시 설정을 수정한다")
     void updatePushSettings() throws Exception {
-        // given
         PushSettingRequest request = new PushSettingRequest(
                 true,
                 7,
                 false,
                 LocalTime.of(9, 30)
         );
-
         PushSettingResponse response = new PushSettingResponse(
                 true,
                 7,
@@ -73,12 +70,9 @@ class PushSettingControllerTest {
                 LocalTime.of(9, 30)
         );
 
-        BDDMockito.given(pushSettingService.updatePushSettings(
-                        any(PushSettingRequest.class)
-                ))
+        BDDMockito.given(pushSettingService.updatePushSettings(any(PushSettingRequest.class)))
                 .willReturn(response);
 
-        // when & then
         mockMvc.perform(put("/api/push-settings")
                         .contentType(APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
@@ -92,7 +86,6 @@ class PushSettingControllerTest {
     @Test
     @DisplayName("자외선 알림 기준값이 11을 초과하면 400을 반환한다")
     void updatePushSettingsWithInvalidThreshold() throws Exception {
-        // given
         PushSettingRequest request = new PushSettingRequest(
                 true,
                 12,
@@ -100,7 +93,6 @@ class PushSettingControllerTest {
                 LocalTime.of(9, 30)
         );
 
-        // when & then
         mockMvc.perform(put("/api/push-settings")
                         .contentType(APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
@@ -110,7 +102,6 @@ class PushSettingControllerTest {
     @Test
     @DisplayName("알림 시간이 null이면 400을 반환한다")
     void updatePushSettingsWithNullAlertTime() throws Exception {
-        // given
         PushSettingRequest request = new PushSettingRequest(
                 true,
                 8,
@@ -118,7 +109,6 @@ class PushSettingControllerTest {
                 null
         );
 
-        // when & then
         mockMvc.perform(put("/api/push-settings")
                         .contentType(APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))

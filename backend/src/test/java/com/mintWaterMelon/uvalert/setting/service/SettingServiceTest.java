@@ -31,7 +31,6 @@ class SettingServiceTest {
     @Test
     @DisplayName("저장된 앱 설정이 없으면 기본 설정을 생성해서 반환한다")
     void getSettingsCreatesDefaultSettingWhenEmpty() {
-        // given
         AppSetting defaultSetting = new AppSetting(
                 "1100000000",
                 6,
@@ -39,42 +38,25 @@ class SettingServiceTest {
                 LocalTime.of(8, 0)
         );
 
-        AreaResponse seoul = new AreaResponse(
-                "1100000000",
-                "서울특별시",
-                "",
-                "",
-                "서울특별시",
-                60,
-                127
-        );
-
-        given(appSettingRepository.findAll())
-                .willReturn(List.of());
-
+        given(appSettingRepository.findAll()).willReturn(List.of());
         given(appSettingRepository.save(Mockito.any(AppSetting.class)))
                 .willReturn(defaultSetting);
-
         given(areaService.getAreaByAreaNo("1100000000"))
-                .willReturn(seoul);
+                .willReturn(area("1100000000", "서울특별시", "", "", "서울특별시", 60, 127));
 
-        // when
         SettingResponse response = settingService.getSettings();
 
-        // then
         assertThat(response.defaultAreaNo()).isEqualTo("1100000000");
         assertThat(response.defaultLocationName()).isEqualTo("서울특별시");
         assertThat(response.defaultUvThreshold()).isEqualTo(6);
         assertThat(response.sunscreenAlertEnabled()).isTrue();
         assertThat(response.defaultAlertTime()).isEqualTo(LocalTime.of(8, 0));
-
         verify(appSettingRepository).save(Mockito.any(AppSetting.class));
     }
 
     @Test
     @DisplayName("저장된 앱 설정이 있으면 기존 설정을 반환한다")
     void getSettingsReturnsExistingSetting() {
-        // given
         AppSetting existingSetting = new AppSetting(
                 "1168000000",
                 8,
@@ -82,47 +64,29 @@ class SettingServiceTest {
                 LocalTime.of(9, 30)
         );
 
-        AreaResponse gangnam = new AreaResponse(
-                "1168000000",
-                "서울특별시",
-                "강남구",
-                "",
-                "서울특별시 강남구",
-                61,
-                126
-        );
-
-        given(appSettingRepository.findAll())
-                .willReturn(List.of(existingSetting));
-
+        given(appSettingRepository.findAll()).willReturn(List.of(existingSetting));
         given(areaService.getAreaByAreaNo("1168000000"))
-                .willReturn(gangnam);
+                .willReturn(area("1168000000", "서울특별시", "강남구", "", "서울특별시 강남구", 61, 126));
 
-        // when
         SettingResponse response = settingService.getSettings();
 
-        // then
         assertThat(response.defaultAreaNo()).isEqualTo("1168000000");
         assertThat(response.defaultLocationName()).isEqualTo("서울특별시 강남구");
         assertThat(response.defaultUvThreshold()).isEqualTo(8);
         assertThat(response.sunscreenAlertEnabled()).isFalse();
         assertThat(response.defaultAlertTime()).isEqualTo(LocalTime.of(9, 30));
-
-        verify(appSettingRepository, Mockito.never())
-                .save(Mockito.any(AppSetting.class));
+        verify(appSettingRepository, Mockito.never()).save(Mockito.any(AppSetting.class));
     }
 
     @Test
     @DisplayName("앱 설정을 수정한다")
     void updateSettingsUpdatesExistingSetting() {
-        // given
         AppSetting existingSetting = new AppSetting(
                 "1100000000",
                 6,
                 true,
                 LocalTime.of(8, 0)
         );
-
         SettingRequest request = new SettingRequest(
                 "1168000000",
                 9,
@@ -130,26 +94,12 @@ class SettingServiceTest {
                 LocalTime.of(21, 15)
         );
 
-        AreaResponse gangnam = new AreaResponse(
-                "1168000000",
-                "서울특별시",
-                "강남구",
-                "",
-                "서울특별시 강남구",
-                61,
-                126
-        );
-
-        given(appSettingRepository.findAll())
-                .willReturn(List.of(existingSetting));
-
+        given(appSettingRepository.findAll()).willReturn(List.of(existingSetting));
         given(areaService.getAreaByAreaNo("1168000000"))
-                .willReturn(gangnam);
+                .willReturn(area("1168000000", "서울특별시", "강남구", "", "서울특별시 강남구", 61, 126));
 
-        // when
         SettingResponse response = settingService.updateSettings(request);
 
-        // then
         assertThat(response.defaultAreaNo()).isEqualTo("1168000000");
         assertThat(response.defaultLocationName()).isEqualTo("서울특별시 강남구");
         assertThat(response.defaultUvThreshold()).isEqualTo(9);
@@ -165,14 +115,12 @@ class SettingServiceTest {
     @Test
     @DisplayName("앱 설정 수정 시 기존 설정이 없으면 기본 설정을 만든 뒤 수정한다")
     void updateSettingsCreatesDefaultThenUpdatesWhenEmpty() {
-        // given
         AppSetting savedDefaultSetting = new AppSetting(
                 "1100000000",
                 6,
                 true,
                 LocalTime.of(8, 0)
         );
-
         SettingRequest request = new SettingRequest(
                 "1168000000",
                 7,
@@ -180,35 +128,31 @@ class SettingServiceTest {
                 LocalTime.of(7, 45)
         );
 
-        AreaResponse gangnam = new AreaResponse(
-                "1168000000",
-                "서울특별시",
-                "강남구",
-                "",
-                "서울특별시 강남구",
-                61,
-                126
-        );
-
-        given(appSettingRepository.findAll())
-                .willReturn(List.of());
-
+        given(appSettingRepository.findAll()).willReturn(List.of());
         given(appSettingRepository.save(Mockito.any(AppSetting.class)))
                 .willReturn(savedDefaultSetting);
-
         given(areaService.getAreaByAreaNo("1168000000"))
-                .willReturn(gangnam);
+                .willReturn(area("1168000000", "서울특별시", "강남구", "", "서울특별시 강남구", 61, 126));
 
-        // when
         SettingResponse response = settingService.updateSettings(request);
 
-        // then
         assertThat(response.defaultAreaNo()).isEqualTo("1168000000");
         assertThat(response.defaultLocationName()).isEqualTo("서울특별시 강남구");
         assertThat(response.defaultUvThreshold()).isEqualTo(7);
         assertThat(response.sunscreenAlertEnabled()).isFalse();
         assertThat(response.defaultAlertTime()).isEqualTo(LocalTime.of(7, 45));
-
         verify(appSettingRepository).save(Mockito.any(AppSetting.class));
+    }
+
+    private AreaResponse area(
+            String areaNo,
+            String level1,
+            String level2,
+            String level3,
+            String displayName,
+            int gridX,
+            int gridY
+    ) {
+        return new AreaResponse(areaNo, level1, level2, level3, displayName, gridX, gridY);
     }
 }

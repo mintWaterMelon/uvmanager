@@ -26,7 +26,6 @@ class PushSettingServiceTest {
     @Test
     @DisplayName("저장된 푸시 설정이 없으면 기본 설정을 생성해서 반환한다")
     void getPushSettingsCreatesDefaultSettingWhenEmpty() {
-        // given
         PushSetting defaultSetting = new PushSetting(
                 true,
                 8,
@@ -34,28 +33,21 @@ class PushSettingServiceTest {
                 LocalTime.of(8, 0)
         );
 
-        given(pushSettingRepository.findAll())
-                .willReturn(List.of());
+        given(pushSettingRepository.findAll()).willReturn(List.of());
+        given(pushSettingRepository.save(Mockito.any(PushSetting.class))).willReturn(defaultSetting);
 
-        given(pushSettingRepository.save(Mockito.any(PushSetting.class)))
-                .willReturn(defaultSetting);
-
-        // when
         PushSettingResponse response = pushSettingService.getPushSettings();
 
-        // then
         assertThat(response.uvAlertEnabled()).isTrue();
         assertThat(response.uvAlertThreshold()).isEqualTo(8);
         assertThat(response.dustAlertEnabled()).isFalse();
         assertThat(response.alertTime()).isEqualTo(LocalTime.of(8, 0));
-
         verify(pushSettingRepository).save(Mockito.any(PushSetting.class));
     }
 
     @Test
     @DisplayName("저장된 푸시 설정이 있으면 기존 설정을 반환한다")
     void getPushSettingsReturnsExistingSetting() {
-        // given
         PushSetting existingSetting = new PushSetting(
                 false,
                 6,
@@ -63,33 +55,26 @@ class PushSettingServiceTest {
                 LocalTime.of(9, 30)
         );
 
-        given(pushSettingRepository.findAll())
-                .willReturn(List.of(existingSetting));
+        given(pushSettingRepository.findAll()).willReturn(List.of(existingSetting));
 
-        // when
         PushSettingResponse response = pushSettingService.getPushSettings();
 
-        // then
         assertThat(response.uvAlertEnabled()).isFalse();
         assertThat(response.uvAlertThreshold()).isEqualTo(6);
         assertThat(response.dustAlertEnabled()).isTrue();
         assertThat(response.alertTime()).isEqualTo(LocalTime.of(9, 30));
-
-        verify(pushSettingRepository, Mockito.never())
-                .save(Mockito.any(PushSetting.class));
+        verify(pushSettingRepository, Mockito.never()).save(Mockito.any(PushSetting.class));
     }
 
     @Test
     @DisplayName("푸시 설정을 수정한다")
     void updatePushSettingsUpdatesExistingSetting() {
-        // given
         PushSetting existingSetting = new PushSetting(
                 true,
                 8,
                 false,
                 LocalTime.of(8, 0)
         );
-
         PushSettingRequest request = new PushSettingRequest(
                 false,
                 5,
@@ -97,14 +82,10 @@ class PushSettingServiceTest {
                 LocalTime.of(21, 15)
         );
 
-        given(pushSettingRepository.findAll())
-                .willReturn(List.of(existingSetting));
+        given(pushSettingRepository.findAll()).willReturn(List.of(existingSetting));
 
-        // when
-        PushSettingResponse response =
-                pushSettingService.updatePushSettings(request);
+        PushSettingResponse response = pushSettingService.updatePushSettings(request);
 
-        // then
         assertThat(response.uvAlertEnabled()).isFalse();
         assertThat(response.uvAlertThreshold()).isEqualTo(5);
         assertThat(response.dustAlertEnabled()).isTrue();
@@ -119,14 +100,12 @@ class PushSettingServiceTest {
     @Test
     @DisplayName("푸시 설정 수정 시 기존 설정이 없으면 기본 설정을 만든 뒤 수정한다")
     void updatePushSettingsCreatesDefaultThenUpdatesWhenEmpty() {
-        // given
         PushSetting savedDefaultSetting = new PushSetting(
                 true,
                 8,
                 false,
                 LocalTime.of(8, 0)
         );
-
         PushSettingRequest request = new PushSettingRequest(
                 false,
                 4,
@@ -134,22 +113,15 @@ class PushSettingServiceTest {
                 LocalTime.of(7, 45)
         );
 
-        given(pushSettingRepository.findAll())
-                .willReturn(List.of());
+        given(pushSettingRepository.findAll()).willReturn(List.of());
+        given(pushSettingRepository.save(Mockito.any(PushSetting.class))).willReturn(savedDefaultSetting);
 
-        given(pushSettingRepository.save(Mockito.any(PushSetting.class)))
-                .willReturn(savedDefaultSetting);
+        PushSettingResponse response = pushSettingService.updatePushSettings(request);
 
-        // when
-        PushSettingResponse response =
-                pushSettingService.updatePushSettings(request);
-
-        // then
         assertThat(response.uvAlertEnabled()).isFalse();
         assertThat(response.uvAlertThreshold()).isEqualTo(4);
         assertThat(response.dustAlertEnabled()).isFalse();
         assertThat(response.alertTime()).isEqualTo(LocalTime.of(7, 45));
-
         verify(pushSettingRepository).save(Mockito.any(PushSetting.class));
     }
 }

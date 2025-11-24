@@ -23,23 +23,13 @@ class PushSettingRepositoryTest {
     @Test
     @DisplayName("푸시 설정을 저장하고 id로 조회한다")
     void saveAndFindById() {
-        // given
-        PushSetting pushSetting = new PushSetting(
-                true,
-                8,
-                false,
-                LocalTime.of(8, 0)
+        PushSetting savedSetting = pushSettingRepository.save(
+                new PushSetting(true, 8, false, LocalTime.of(8, 0))
         );
 
-        PushSetting savedSetting = pushSettingRepository.save(pushSetting);
+        Optional<PushSetting> result = pushSettingRepository.findById(savedSetting.getId());
 
-        // when
-        Optional<PushSetting> result =
-                pushSettingRepository.findById(savedSetting.getId());
-
-        // then
         assertThat(result).isPresent();
-
         PushSetting foundSetting = result.get();
         assertThat(foundSetting.getId()).isNotNull();
         assertThat(foundSetting.isUvAlertEnabled()).isTrue();
@@ -51,28 +41,11 @@ class PushSettingRepositoryTest {
     @Test
     @DisplayName("저장된 모든 푸시 설정을 조회한다")
     void findAllPushSettings() {
-        // given
-        PushSetting morningSetting = new PushSetting(
-                true,
-                8,
-                false,
-                LocalTime.of(8, 0)
-        );
+        pushSettingRepository.save(new PushSetting(true, 8, false, LocalTime.of(8, 0)));
+        pushSettingRepository.save(new PushSetting(false, 6, true, LocalTime.of(18, 30)));
 
-        PushSetting eveningSetting = new PushSetting(
-                false,
-                6,
-                true,
-                LocalTime.of(18, 30)
-        );
-
-        pushSettingRepository.save(morningSetting);
-        pushSettingRepository.save(eveningSetting);
-
-        // when
         List<PushSetting> result = pushSettingRepository.findAll();
 
-        // then
         assertThat(result).hasSize(2);
         assertThat(result)
                 .extracting(PushSetting::getUvAlertThreshold)
@@ -82,32 +55,16 @@ class PushSettingRepositoryTest {
     @Test
     @DisplayName("푸시 설정을 수정하면 변경된 값이 저장된다")
     void updatePushSetting() {
-        // given
-        PushSetting pushSetting = new PushSetting(
-                true,
-                8,
-                false,
-                LocalTime.of(8, 0)
+        PushSetting savedSetting = pushSettingRepository.save(
+                new PushSetting(true, 8, false, LocalTime.of(8, 0))
         );
 
-        PushSetting savedSetting = pushSettingRepository.save(pushSetting);
-
-        // when
-        savedSetting.update(
-                false,
-                5,
-                true,
-                LocalTime.of(21, 15)
-        );
-
+        savedSetting.update(false, 5, true, LocalTime.of(21, 15));
         pushSettingRepository.flush();
 
-        // then
-        Optional<PushSetting> result =
-                pushSettingRepository.findById(savedSetting.getId());
+        Optional<PushSetting> result = pushSettingRepository.findById(savedSetting.getId());
 
         assertThat(result).isPresent();
-
         PushSetting foundSetting = result.get();
         assertThat(foundSetting.isUvAlertEnabled()).isFalse();
         assertThat(foundSetting.getUvAlertThreshold()).isEqualTo(5);
@@ -118,23 +75,12 @@ class PushSettingRepositoryTest {
     @Test
     @DisplayName("푸시 설정을 삭제한다")
     void deletePushSetting() {
-        // given
-        PushSetting pushSetting = new PushSetting(
-                true,
-                8,
-                false,
-                LocalTime.of(8, 0)
+        PushSetting savedSetting = pushSettingRepository.save(
+                new PushSetting(true, 8, false, LocalTime.of(8, 0))
         );
 
-        PushSetting savedSetting = pushSettingRepository.save(pushSetting);
-
-        // when
         pushSettingRepository.delete(savedSetting);
 
-        // then
-        Optional<PushSetting> result =
-                pushSettingRepository.findById(savedSetting.getId());
-
-        assertThat(result).isEmpty();
+        assertThat(pushSettingRepository.findById(savedSetting.getId())).isEmpty();
     }
 }

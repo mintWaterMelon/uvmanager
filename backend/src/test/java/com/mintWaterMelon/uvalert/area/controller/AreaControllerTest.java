@@ -15,8 +15,8 @@ import java.util.List;
 import static org.hamcrest.Matchers.hasSize;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(AreaController.class)
 class AreaControllerTest {
@@ -30,7 +30,6 @@ class AreaControllerTest {
     @Test
     @DisplayName("지역 목록을 조회한다")
     void searchAreas() throws Exception {
-        // given
         AreaResponse seoul = new AreaResponse(
                 "1100000000",
                 "서울특별시",
@@ -44,7 +43,6 @@ class AreaControllerTest {
         BDDMockito.given(areaService.searchAreas(null))
                 .willReturn(List.of(seoul));
 
-        // when & then
         mockMvc.perform(get("/api/areas"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(1)))
@@ -57,7 +55,6 @@ class AreaControllerTest {
     @Test
     @DisplayName("키워드로 지역을 검색한다")
     void searchAreasByKeyword() throws Exception {
-        // given
         AreaResponse gangnam = new AreaResponse(
                 "1168000000",
                 "서울특별시",
@@ -71,7 +68,6 @@ class AreaControllerTest {
         BDDMockito.given(areaService.searchAreas(eq("강남")))
                 .willReturn(List.of(gangnam));
 
-        // when & then
         mockMvc.perform(get("/api/areas")
                         .param("keyword", "강남"))
                 .andExpect(status().isOk())

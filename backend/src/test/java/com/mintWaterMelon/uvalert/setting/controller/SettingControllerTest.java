@@ -18,7 +18,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(SettingController.class)
 class SettingControllerTest {
@@ -35,7 +36,6 @@ class SettingControllerTest {
     @Test
     @DisplayName("앱 설정을 조회한다")
     void getSettings() throws Exception {
-        // given
         SettingResponse response = new SettingResponse(
                 "1100000000",
                 "서울특별시",
@@ -47,7 +47,6 @@ class SettingControllerTest {
         BDDMockito.given(settingService.getSettings())
                 .willReturn(response);
 
-        // when & then
         mockMvc.perform(get("/api/settings"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.defaultAreaNo").value("1100000000"))
@@ -60,7 +59,6 @@ class SettingControllerTest {
     @Test
     @DisplayName("앱 설정을 수정한다")
     void updateSettings() throws Exception {
-        // given
         SettingRequest request = new SettingRequest(
                 "1168000000",
                 8,
@@ -79,7 +77,6 @@ class SettingControllerTest {
         BDDMockito.given(settingService.updateSettings(any(SettingRequest.class)))
                 .willReturn(response);
 
-        // when & then
         mockMvc.perform(put("/api/settings")
                         .contentType(APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
@@ -94,7 +91,6 @@ class SettingControllerTest {
     @Test
     @DisplayName("기본 지역 코드가 비어 있으면 400을 반환한다")
     void updateSettingsWithBlankDefaultAreaNo() throws Exception {
-        // given
         SettingRequest request = new SettingRequest(
                 "",
                 8,
@@ -102,7 +98,6 @@ class SettingControllerTest {
                 LocalTime.of(9, 30)
         );
 
-        // when & then
         mockMvc.perform(put("/api/settings")
                         .contentType(APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
@@ -112,7 +107,6 @@ class SettingControllerTest {
     @Test
     @DisplayName("기본 자외선 기준값이 11을 초과하면 400을 반환한다")
     void updateSettingsWithInvalidUvThreshold() throws Exception {
-        // given
         SettingRequest request = new SettingRequest(
                 "1100000000",
                 12,
@@ -120,7 +114,6 @@ class SettingControllerTest {
                 LocalTime.of(9, 30)
         );
 
-        // when & then
         mockMvc.perform(put("/api/settings")
                         .contentType(APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
@@ -130,7 +123,6 @@ class SettingControllerTest {
     @Test
     @DisplayName("기본 알림 시간이 null이면 400을 반환한다")
     void updateSettingsWithNullDefaultAlertTime() throws Exception {
-        // given
         SettingRequest request = new SettingRequest(
                 "1100000000",
                 8,
@@ -138,7 +130,6 @@ class SettingControllerTest {
                 null
         );
 
-        // when & then
         mockMvc.perform(put("/api/settings")
                         .contentType(APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
