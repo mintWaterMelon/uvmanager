@@ -1,11 +1,11 @@
 package com.mintWaterMelon.uvalert.setting.repository;
 
 import com.mintWaterMelon.uvalert.setting.entity.AppSetting;
+import com.mintWaterMelon.uvalert.support.PostgresTestContainerSupport;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.test.context.ActiveProfiles;
 
 import java.time.LocalTime;
 import java.util.List;
@@ -13,9 +13,8 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@ActiveProfiles("test")
 @DataJpaTest
-class AppSettingRepositoryTest {
+class AppSettingRepositoryTest extends PostgresTestContainerSupport {
 
     @Autowired
     private AppSettingRepository appSettingRepository;
