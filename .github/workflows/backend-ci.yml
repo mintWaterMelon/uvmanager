@@ -6,11 +6,13 @@ on:
     paths:
       - "backend/**"
       - ".github/workflows/backend-ci.yml"
+      - "docker-compose.yml"
   pull_request:
     branches: [ "main", "develop" ]
     paths:
       - "backend/**"
       - ".github/workflows/backend-ci.yml"
+      - "docker-compose.yml"
   workflow_dispatch:
 
 jobs:
@@ -24,6 +26,7 @@ jobs:
 
     env:
       KMA_SERVICE_KEY: test-key-for-ci
+      TESTCONTAINERS_RYUK_DISABLED: "false"
 
     steps:
       - name: Checkout source code
@@ -37,6 +40,9 @@ jobs:
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
+
+      - name: Check Docker
+        run: docker version
 
       - name: Grant execute permission for Gradle wrapper
         run: chmod +x ./gradlew
