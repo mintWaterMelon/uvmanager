@@ -168,33 +168,32 @@ DAY_AFTER_TOMORROW
 
 Spring Profile을 사용하여 실행 환경별 설정을 분리했습니다.
 
-| Profile | 설정 파일 | 용도 |
-|---|---|---|
-| local | `application-local.properties` | 로컬 개발 환경 |
-| test | `application-test.properties` | 테스트 실행 환경 |
-| prod | `application-prod.properties` | 운영 배포 환경 |
+| Profile | 설정 파일 | DB | 용도 |
+|---|---|---|---|
+| local | `application-local.properties` | PostgreSQL | 로컬 개발 환경 |
+| test | `application-test.properties` | H2 | 일반 테스트 실행 환경 |
+| prod | `application-prod.properties` | PostgreSQL | 운영 배포 환경 |
 
 ### local
 
-- 로컬 개발 서버 실행용 설정
-- PostgreSQL 또는 H2 사용
-- `ddl-auto=update`
+- Docker Compose로 실행한 PostgreSQL 사용
+- Flyway migration으로 DB 스키마 생성
+- Hibernate는 `ddl-auto=validate`로 Entity와 DB 스키마 일치 여부만 검증
 - SQL 로그 출력
-- 기상청 API Key는 환경변수로 주입
 
 ### test
 
-- 테스트 실행 전용 설정
 - H2 인메모리 DB 사용
 - `ddl-auto=create-drop`
+- Flyway 비활성화
 - 테스트용 API Key 사용
 
 ### prod
 
-- 운영 배포 전용 설정
-- DB 접속 정보와 기상청 API Key는 환경변수로 주입
-- `ddl-auto=validate`
-- DB 스키마 변경은 추후 Flyway로 관리 예정
+- 운영 DB 정보는 환경변수로 주입
+- Flyway migration으로 DB 스키마 관리
+- Hibernate는 `ddl-auto=validate`
+- SQL 로그 비활성화
 
 ---
 
@@ -267,6 +266,15 @@ PostgreSQL 접속 정보:
 docker ps
 ```
 
+### 로컬 DB 초기화
+
+Flyway를 처음 적용했거나 기존에 Hibernate `ddl-auto=update`로 생성된 테이블이 남아 있는 경우, 로컬 개발 DB를 초기화한 뒤 실행합니다.
+
+```bash
+docker compose down -v
+docker compose up -d
+```
+
 ### 4. 백엔드 서버 실행
 
 Windows PowerShell:
@@ -301,7 +309,7 @@ http://localhost:8080/swagger-ui/index.html
 
 ## 9. 테스트
 
-JUnit 5, AssertJ, Mockito, Spring MVC Test, Data JPA Test를 사용하여 테스트를 구성했습니다.
+JUnit 5, AssertJ, Mockito, Spring MVC Test, Data JPA Test, Testcontainers를 사용하여 테스트를 구성했습니다.
 
 ### 테스트 실행
 
@@ -379,7 +387,12 @@ Checkout source code
 | test | H2 in-memory | 테스트 실행 |
 | prod | PostgreSQL | 운영 배포 예정 |
 
-운영 환경에서는 `ddl-auto=validate`를 사용하고, 추후 Flyway를 도입하여 DB 변경 이력을 SQL migration 파일로 관리할 예정입니다.
+운영 환경에서는 `ddl-auto=validate`를 사용하고, Flyway으로 DB 변경 이력을 SQL migration 파일로 관리합니다.
+
+Migration 파일 위치:
+
+```text
+backend/src/main/resources/db/migration
 
 ---
 
