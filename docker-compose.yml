@@ -10,6 +10,27 @@ services:
       POSTGRES_PASSWORD: uvalert
     volumes:
       - uvalert-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U uvalert -d uvalert"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: ./backend
+    container_name: uvalert-backend
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      DATABASE_URL: jdbc:postgresql://postgres:5432/uvalert
+      DATABASE_USERNAME: uvalert
+      DATABASE_PASSWORD: uvalert
+      KMA_SERVICE_KEY: ${KMA_SERVICE_KEY}
+    depends_on:
+      postgres:
+        condition: service_healthy
 
 volumes:
   uvalert-postgres-data:
