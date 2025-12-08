@@ -199,7 +199,13 @@ Spring Profile을 사용하여 실행 환경별 설정을 분리했습니다.
 
 ## 7. 환경변수
 
-민감한 정보는 코드에 직접 작성하지 않고 환경변수로 관리합니다.
+프로젝트 실행에는 기상청 API Key가 필요합니다.
+
+실제 환경변수는 프로젝트 루트의 `.env` 파일에 작성합니다.
+
+```env
+KMA_SERVICE_KEY=기상청_API_KEY
+```
 
 ### local
 
@@ -241,7 +247,15 @@ cd uvalert
 java -version
 ```
 
-### 3. 로컬 PostgreSQL 실행
+### 3. 환경변수 파일 생성
+
+프로젝트 루트에 `.env` 파일을 생성합니다.
+
+```env
+KMA_SERVICE_KEY=본인_기상청_API_KEY
+```
+
+### 4. 로컬 PostgreSQL 실행
 
 로컬 개발 DB는 Docker Compose로 실행할 수 있습니다.
 
@@ -266,7 +280,7 @@ PostgreSQL 접속 정보:
 docker ps
 ```
 
-### 로컬 DB 초기화
+### 5. 로컬 DB 초기화
 
 Flyway를 처음 적용했거나 기존에 Hibernate `ddl-auto=update`로 생성된 테이블이 남아 있는 경우, 로컬 개발 DB를 초기화한 뒤 실행합니다.
 
@@ -275,7 +289,7 @@ docker compose down -v
 docker compose up -d
 ```
 
-### 4. 백엔드 서버 실행
+### 6. 백엔드 서버 실행
 
 Windows PowerShell:
 
