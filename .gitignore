@@ -83,3 +83,6 @@ mobile/android/
 
 # expo 실행시 생김
 mobile/.gitignore
+
+# 기상청 키
+.env
