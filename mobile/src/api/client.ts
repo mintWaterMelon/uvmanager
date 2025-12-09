@@ -1,4 +1,8 @@
-const API_BASE_URL = "http://172.30.1.47:8080";
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL;
+
+if (!API_BASE_URL) {
+    throw new Error("EXPO_PUBLIC_API_BASE_URL is not defined");
+}
 
 export class ApiError extends Error {
     status: number;

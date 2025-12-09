@@ -86,3 +86,4 @@ mobile/.gitignore
 
 # 기상청 키
 .env
+mobile/.env
