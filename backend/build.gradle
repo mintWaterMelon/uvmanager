@@ -25,6 +25,8 @@ dependencies {
 	implementation 'org.apache.poi:poi-ooxml:5.2.5' //엑셀 파일(지역 코드) api - Apache POI
 	implementation 'org.flywaydb:flyway-core'					//Flyway
 	implementation 'org.flywaydb:flyway-database-postgresql'	//Flyway-postgreSQL
+	implementation 'org.springframework.boot:spring-boot-starter-cache'		//cache
+	implementation 'com.github.ben-manes.caffeine:caffeine'					//cache
 	runtimeOnly 'com.h2database:h2'
 	runtimeOnly 'org.postgresql:postgresql'
 	compileOnly 'org.projectlombok:lombok'

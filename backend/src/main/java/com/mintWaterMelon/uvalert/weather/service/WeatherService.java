@@ -4,6 +4,7 @@ import com.mintWaterMelon.uvalert.weather.client.ShortForecastClient;
 import com.mintWaterMelon.uvalert.weather.client.UvIndexClient;
 import com.mintWaterMelon.uvalert.weather.dto.ShortForecastResponse;
 import com.mintWaterMelon.uvalert.weather.dto.UvIndexResponse;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -20,10 +21,18 @@ public class WeatherService {
         this.shortForecastClient = shortForecastClient;
     }
 
+    @Cacheable(
+            value = "uvIndex",
+            key = "#areaNo + ':' + #time"
+    )
     public UvIndexResponse getUvIndex(String areaNo, String time) {
         return uvIndexClient.getUvIndex(areaNo, time);
     }
 
+    @Cacheable(
+            value = "shortForecast",
+            key = "#baseDate + ':' + #baseTime + ':' + #nx + ':' + #ny"
+    )
     public ShortForecastResponse getShortForecast(
             String baseDate,
             String baseTime,
