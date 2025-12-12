@@ -16,6 +16,9 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 @Service
 public class HomeDashboardService {
 
@@ -24,6 +27,7 @@ public class HomeDashboardService {
     private final HomeBackgroundService homeBackgroundService;
     private final HomeAdviceService homeAdviceService;
     private final HomeTableSummaryCalculator homeTableSummaryCalculator;
+    private static final Logger log = LoggerFactory.getLogger(HomeDashboardService.class);
 
     public HomeDashboardService(
             AreaService areaService,
@@ -48,6 +52,9 @@ public class HomeDashboardService {
             String areaNo,
             HomeDateType dateType
     ) {
+        long startTime = System.currentTimeMillis();
+
+        try {
         LocalDate today = LocalDate.now();
         LocalDateTime currentTime = LocalDateTime.now();
 
@@ -186,6 +193,16 @@ public class HomeDashboardService {
                         )
                 )
         );
+        } finally {
+            long elapsedTime = System.currentTimeMillis() - startTime;
+
+            log.info(
+                    "Home dashboard loaded. areaNo={}, dateType={}, elapsedTime={}ms",
+                    areaNo,
+                    dateType,
+                    elapsedTime
+            );
+        }
     }
 
     private void validateGrid(AreaResponse area) {
