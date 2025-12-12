@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
     ActivityIndicator,
     Pressable,
@@ -29,6 +29,7 @@ export default function HomeScreen() {
     //대쉬보드 데이터
     const [dashboard, setDashboard] = useState<HomeDashboardResponse | null>(null);
     const [dateType, setDateType] = useState<HomeDateType>("TODAY");
+    const [currentDateTime, setCurrentDateTime] = useState(() => new Date());
 
     const [isInitialLoading, setIsInitialLoading] = useState(true);
     const [isRefreshingDashboard, setIsRefreshingDashboard] = useState(false);
@@ -44,6 +45,16 @@ export default function HomeScreen() {
     const updateDashboard = useCallback((nextDashboard: HomeDashboardResponse) => {
         dashboardRef.current = nextDashboard;
         setDashboard(nextDashboard);
+    }, []);
+
+    useEffect(() => {
+        const timerId = setInterval(() => {
+            setCurrentDateTime(new Date());
+        }, 30_000);
+
+        return () => {
+            clearInterval(timerId);
+        };
     }, []);
 
     const loadDashboard = useCallback(async (
@@ -158,7 +169,7 @@ export default function HomeScreen() {
             <ScreenContainer>
                 <View style={styles.centerContainer}>
                     <ActivityIndicator size="large" />
-                    <Text style={styles.loadingText}>최신 정보를 불러오는 중입니다</Text>
+                    <Text style={styles.loadingText}>홈 데이터를 불러오는 중입니다...</Text>
                 </View>
             </ScreenContainer>
         );
@@ -185,6 +196,11 @@ export default function HomeScreen() {
     const textColor = getThemeTextColor(theme);
     const subTextColor = getThemeSubTextColor(theme);
     const cardBackgroundColor = getCardBackgroundColor(theme);
+    const formattedCurrentDateTime = formatDateTime(currentDateTime.toISOString());
+    const [headerDateText, headerTimeSuffix] = formattedCurrentDateTime.split(" 오");
+    const headerTimeText = headerTimeSuffix
+        ? `오${headerTimeSuffix}`
+        : formattedCurrentDateTime;
 
     return (
         <ScreenContainer style={{ backgroundColor: dashboard.background.color }}>
@@ -208,12 +224,12 @@ export default function HomeScreen() {
                 <View>
                     {/* 앞부분(날짜)만 가져와서 출력 */}
                     <Text style={[styles.headerDate, { color: subTextColor }]}>
-                        {formatDateTime(dashboard.currentTime).split(" 오")[0]}
+                        {headerDateText}
                     </Text>
 
                     {/* 뒷부분(오전/오후 시간)만 가져와서 출력 */}
                     <Text style={[styles.headerTime, { color: textColor }]}>
-                        {"오" + formatDateTime(dashboard.currentTime).split(" 오")[1]}
+                        {headerTimeText}
                     </Text>
                 </View>
 
@@ -248,6 +264,13 @@ export default function HomeScreen() {
                             onPress={() => handleChangeDateType("DAY_AFTER_TOMORROW")}
                         />
                     </View>
+
+                    {isRefreshingDashboard && (
+                        <View style={styles.updatingRow}>
+                            <ActivityIndicator size="small" />
+                            <Text style={styles.updatingText}>최신 정보를 불러오는 중입니다</Text>
+                        </View>
+                    )}
                 </View>
 
                 {errorMessage && (
