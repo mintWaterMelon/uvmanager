@@ -30,14 +30,29 @@ export default function HomeScreen() {
     const [dashboard, setDashboard] = useState<HomeDashboardResponse | null>(null);
     const [dateType, setDateType] = useState<HomeDateType>("TODAY");
 
-    const [loading, setLoading] = useState(true);
+    const [isInitialLoading, setIsInitialLoading] = useState(true);
+    const [isRefreshingDashboard, setIsRefreshingDashboard] = useState(false);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
+    const dashboardRef = useRef<HomeDashboardResponse | null>(null);
     const dashboardCacheRef = useRef<Record<string, HomeDashboardResponse>>({});
+    const dateTypeRef = useRef<HomeDateType>("TODAY");
+    const areaNoRef = useRef<string | null>(null);
     const abortControllerRef = useRef<AbortController | null>(null);
     const latestRequestIdRef = useRef(0);
 
-    const loadDashboard = useCallback(async (options?: { forceRefresh?: boolean }) => {
+    const updateDashboard = useCallback((nextDashboard: HomeDashboardResponse) => {
+        dashboardRef.current = nextDashboard;
+        setDashboard(nextDashboard);
+    }, []);
+
+    const loadDashboard = useCallback(async (
+        targetDateType: HomeDateType = dateTypeRef.current,
+        options?: {
+            forceRefresh?: boolean;
+            forceSettingsRefresh?: boolean;
+        }
+    ) => {
         const requestId = latestRequestIdRef.current + 1;
         latestRequestIdRef.current = requestId;
 
@@ -46,24 +61,43 @@ export default function HomeScreen() {
         const abortController = new AbortController();
         abortControllerRef.current = abortController;
 
+        const hasDashboard = dashboardRef.current !== null;
+
+        if (hasDashboard) {
+            setIsRefreshingDashboard(true);
+        } else {
+            setIsInitialLoading(true);
+        }
+
         try {
-            setLoading(true);       //로딩 화면
             setErrorMessage(null);  //에러 메세지 초기화
 
-            const settings = await getSettings({
-                signal: abortController.signal,
-            });
-            const cacheKey = `${settings.defaultAreaNo}:${dateType}`;
+            let areaNo = areaNoRef.current;
+
+            if (!areaNo || options?.forceSettingsRefresh) {
+                const settings = await getSettings({
+                    signal: abortController.signal,
+                });
+
+                if (abortController.signal.aborted || latestRequestIdRef.current !== requestId) {
+                    return;
+                }
+
+                areaNo = settings.defaultAreaNo;
+                areaNoRef.current = areaNo;
+            }
+
+            const cacheKey = `${areaNo}:${targetDateType}`;
             const cachedDashboard = dashboardCacheRef.current[cacheKey];
 
             if (!options?.forceRefresh && cachedDashboard) {
-                setDashboard(cachedDashboard);
+                updateDashboard(cachedDashboard);
                 return;
             }
 
             const data = await getHomeDashboard(
-                settings.defaultAreaNo,
-                dateType,
+                areaNo,
+                targetDateType,
                 {
                     signal: abortController.signal,
                 }
@@ -74,7 +108,7 @@ export default function HomeScreen() {
             }
 
             dashboardCacheRef.current[cacheKey] = data;
-            setDashboard(data);
+            updateDashboard(data);
         } catch (error) {
             if (isAbortError(error)) {
                 return;
@@ -84,16 +118,17 @@ export default function HomeScreen() {
             setErrorMessage(getApiErrorMessage(error));
         } finally {
             if (abortControllerRef.current === abortController) {
-                setLoading(false);
+                setIsInitialLoading(false);
+                setIsRefreshingDashboard(false);
                 abortControllerRef.current = null;
             }
         }
-    }, [dateType]);
+    }, [updateDashboard]);
 
-    //Home 화면 들어오거나 날짜가 바뀌면 대시보드 다시 로드
+    //Home 화면에 들어오면 최신 설정을 확인하고 대시보드 로드
     useFocusEffect(
         useCallback(() => {
-            loadDashboard();
+            loadDashboard(dateTypeRef.current, { forceSettingsRefresh: true });
 
             return () => {
                 abortControllerRef.current?.abort();
@@ -102,25 +137,34 @@ export default function HomeScreen() {
     );
 
     function handleChangeDateType(nextDateType: HomeDateType) {
-        if (nextDateType === dateType) {
+        if (nextDateType === dateTypeRef.current) {
             return;
         }
 
+        dateTypeRef.current = nextDateType;
         setDateType(nextDateType);
+        loadDashboard(nextDateType);
     }
 
-    if (loading && dashboard === null) {
+    function handleRefresh() {
+        loadDashboard(dateTypeRef.current, {
+            forceRefresh: true,
+            forceSettingsRefresh: true,
+        });
+    }
+
+    if (isInitialLoading && dashboard === null) {
         return (
             <ScreenContainer>
                 <View style={styles.centerContainer}>
                     <ActivityIndicator size="large" />
-                    <Text style={styles.loadingText}>홈 데이터를 불러오는 중입니다...</Text>
+                    <Text style={styles.loadingText}>최신 정보를 불러오는 중입니다</Text>
                 </View>
             </ScreenContainer>
         );
     }
 
-    if (errorMessage || dashboard === null) {
+    if (dashboard === null) {
         return (
             <ScreenContainer>
                 <View style={styles.centerContainer}>
@@ -129,7 +173,7 @@ export default function HomeScreen() {
                         {errorMessage ?? "알 수 없는 오류가 발생했습니다."}
                     </Text>
 
-                    <Pressable style={styles.retryButton} onPress={() => loadDashboard({ forceRefresh: true })}>
+                    <Pressable style={styles.retryButton} onPress={handleRefresh}>
                         <Text style={styles.retryButtonText}>다시 시도</Text>
                     </Pressable>
                 </View>
@@ -152,8 +196,8 @@ export default function HomeScreen() {
                 contentContainerStyle={styles.content}
                 refreshControl={        //당겨서 새로고침
                     <RefreshControl
-                        refreshing={loading}
-                        onRefresh={() => loadDashboard({ forceRefresh: true })}
+                        refreshing={isRefreshingDashboard}
+                        onRefresh={handleRefresh}
                         tintColor="#3182F6"
                         colors={["#3182F6"]}
                     />
@@ -205,6 +249,10 @@ export default function HomeScreen() {
                         />
                     </View>
                 </View>
+
+                {errorMessage && (
+                    <Text style={styles.inlineErrorText}>{errorMessage}</Text>
+                )}
 
                 <View style={[styles.tableCard, { backgroundColor: cardBackgroundColor }]}>
                     <DashboardTable dashboard={dashboard} />
@@ -592,6 +640,28 @@ const styles = StyleSheet.create({
     retryButtonText: {
         color: "#FFFFFF",
         fontWeight: "800",
+    },
+    updatingRow: {
+        marginTop: 8,
+        flexDirection: "row",
+        justifyContent: "center",
+        alignItems: "center",
+        gap: 6,
+    },
+    updatingText: {
+        fontSize: 12,
+        fontWeight: "700",
+        color: "#374151",
+    },
+    inlineErrorText: {
+        borderRadius: 12,
+        paddingVertical: 10,
+        paddingHorizontal: 12,
+        backgroundColor: "rgba(254, 226, 226, 0.92)",
+        color: "#B91C1C",
+        fontSize: 13,
+        fontWeight: "700",
+        textAlign: "center",
     },
     headerDate: {
         fontSize: 14,
