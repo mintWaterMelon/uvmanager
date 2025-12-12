@@ -4,6 +4,10 @@ if (!API_BASE_URL) {
     throw new Error("EXPO_PUBLIC_API_BASE_URL is not defined");
 }
 
+export type ApiRequestOptions = {
+    signal?: AbortSignal;
+};
+
 export class ApiError extends Error {
     status: number;
     url: string;
@@ -19,17 +23,23 @@ export class ApiError extends Error {
     }
 }
 
-export async function apiGet<T>(path: string): Promise<T> {
+export async function apiGet<T>(
+    path: string,
+    options?: ApiRequestOptions
+): Promise<T> {
     const url = `${API_BASE_URL}${path}`;
 
-    const response = await fetch(url);
+    const response = await fetch(url, {
+        signal: options?.signal,
+    });
 
     return handleResponse<T>(response, url, "GET");
 }
 
 export async function apiPost<TResponse, TRequest>(
     path: string,
-    body: TRequest
+    body: TRequest,
+    options?: ApiRequestOptions
 ): Promise<TResponse> {
     const url = `${API_BASE_URL}${path}`;
 
@@ -39,6 +49,7 @@ export async function apiPost<TResponse, TRequest>(
             "Content-Type": "application/json",
         },
         body: JSON.stringify(body),
+        signal: options?.signal,
     });
 
     return handleResponse<TResponse>(response, url, "POST");
@@ -46,7 +57,8 @@ export async function apiPost<TResponse, TRequest>(
 
 export async function apiPut<TResponse, TRequest>(
     path: string,
-    body: TRequest
+    body: TRequest,
+    options?: ApiRequestOptions
 ): Promise<TResponse> {
     const url = `${API_BASE_URL}${path}`;
 
@@ -56,16 +68,21 @@ export async function apiPut<TResponse, TRequest>(
             "Content-Type": "application/json",
         },
         body: JSON.stringify(body),
+        signal: options?.signal,
     });
 
     return handleResponse<TResponse>(response, url, "PUT");
 }
 
-export async function apiDelete(path: string): Promise<void> {
+export async function apiDelete(
+    path: string,
+    options?: ApiRequestOptions
+): Promise<void> {
     const url = `${API_BASE_URL}${path}`;
 
     const response = await fetch(url, {
         method: "DELETE",
+        signal: options?.signal,
     });
 
     await handleResponse<void>(response, url, "DELETE");

@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import {
     ActivityIndicator,
     Pressable,
@@ -33,35 +33,79 @@ export default function HomeScreen() {
     const [loading, setLoading] = useState(true);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-    //Home 화면 들어오면 대시보드 다시 로드
-    useFocusEffect(
-        useCallback(() => {
-            loadDashboard();
-        }, [dateType])
-    );
+    const dashboardCacheRef = useRef<Record<string, HomeDashboardResponse>>({});
+    const abortControllerRef = useRef<AbortController | null>(null);
+    const latestRequestIdRef = useRef(0);
 
-    async function loadDashboard() {
+    const loadDashboard = useCallback(async (options?: { forceRefresh?: boolean }) => {
+        const requestId = latestRequestIdRef.current + 1;
+        latestRequestIdRef.current = requestId;
+
+        abortControllerRef.current?.abort();
+
+        const abortController = new AbortController();
+        abortControllerRef.current = abortController;
+
         try {
             setLoading(true);       //로딩 화면
             setErrorMessage(null);  //에러 메세지 초기화
 
-            const settings = await getSettings();
+            const settings = await getSettings({
+                signal: abortController.signal,
+            });
+            const cacheKey = `${settings.defaultAreaNo}:${dateType}`;
+            const cachedDashboard = dashboardCacheRef.current[cacheKey];
+
+            if (!options?.forceRefresh && cachedDashboard) {
+                setDashboard(cachedDashboard);
+                return;
+            }
 
             const data = await getHomeDashboard(
                 settings.defaultAreaNo,
-                dateType
+                dateType,
+                {
+                    signal: abortController.signal,
+                }
             );
 
+            if (abortController.signal.aborted || latestRequestIdRef.current !== requestId) {
+                return;
+            }
+
+            dashboardCacheRef.current[cacheKey] = data;
             setDashboard(data);
         } catch (error) {
+            if (isAbortError(error)) {
+                return;
+            }
+
             logApiError(error);
             setErrorMessage(getApiErrorMessage(error));
         } finally {
-            setLoading(false);
+            if (abortControllerRef.current === abortController) {
+                setLoading(false);
+                abortControllerRef.current = null;
+            }
         }
-    }
+    }, [dateType]);
+
+    //Home 화면 들어오거나 날짜가 바뀌면 대시보드 다시 로드
+    useFocusEffect(
+        useCallback(() => {
+            loadDashboard();
+
+            return () => {
+                abortControllerRef.current?.abort();
+            };
+        }, [loadDashboard])
+    );
 
     function handleChangeDateType(nextDateType: HomeDateType) {
+        if (nextDateType === dateType) {
+            return;
+        }
+
         setDateType(nextDateType);
     }
 
@@ -85,7 +129,7 @@ export default function HomeScreen() {
                         {errorMessage ?? "알 수 없는 오류가 발생했습니다."}
                     </Text>
 
-                    <Pressable style={styles.retryButton} onPress={loadDashboard}>
+                    <Pressable style={styles.retryButton} onPress={() => loadDashboard({ forceRefresh: true })}>
                         <Text style={styles.retryButtonText}>다시 시도</Text>
                     </Pressable>
                 </View>
@@ -109,7 +153,7 @@ export default function HomeScreen() {
                 refreshControl={        //당겨서 새로고침
                     <RefreshControl
                         refreshing={loading}
-                        onRefresh={loadDashboard}
+                        onRefresh={() => loadDashboard({ forceRefresh: true })}
                         tintColor="#3182F6"
                         colors={["#3182F6"]}
                     />
@@ -182,6 +226,10 @@ export default function HomeScreen() {
     );
 }
 
+function isAbortError(error: unknown) {
+    return error instanceof Error && error.name === "AbortError";
+}
+
 function DateButton({
     label,
     active,
@@ -195,6 +243,7 @@ function DateButton({
         <Pressable
             style={[styles.dateButton, active && styles.dateButtonActive]}
             onPress={onPress}
+            disabled={active}
         >
             <Text
                 style={[

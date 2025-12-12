@@ -1,4 +1,4 @@
-import { apiGet } from "./client";
+import { apiGet, type ApiRequestOptions } from "./client";
 
 export type HomeDateType = "TODAY" | "TOMORROW" | "DAY_AFTER_TOMORROW";
 
@@ -58,8 +58,9 @@ export type HomeDashboardResponse = {
 export function getHomeDashboard(
     areaNo: string,
     dateType: HomeDateType,
+    options?: ApiRequestOptions
 ) {
     const query = `areaNo=${areaNo}&dateType=${dateType}`;
 
-    return apiGet<HomeDashboardResponse>(`/api/home/dashboard?${query}`);
+    return apiGet<HomeDashboardResponse>(`/api/home/dashboard?${query}`, options);
 }

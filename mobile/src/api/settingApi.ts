@@ -1,4 +1,4 @@
-import { apiGet, apiPut } from "./client";
+import { apiGet, apiPut, type ApiRequestOptions } from "./client";
 
 export type SettingRequest = {
     defaultAreaNo: string;
@@ -15,8 +15,8 @@ export type SettingResponse = {
     defaultAlertTime: string;
 };
 
-export function getSettings() {
-    return apiGet<SettingResponse>("/api/settings");
+export function getSettings(options?: ApiRequestOptions) {
+    return apiGet<SettingResponse>("/api/settings", options);
 }
 
 export function updateSettings(request: SettingRequest) {
