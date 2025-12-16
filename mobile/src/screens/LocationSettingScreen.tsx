@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
     ActivityIndicator,
     Pressable,
@@ -14,6 +14,8 @@ import { AreaResponse, searchAreas } from "../api/areaApi";
 import { getSettings, updateSettings } from "../api/settingApi";
 import ScreenContainer from "../components/ScreenContainer";
 import { getApiErrorMessage, logApiError } from "../api/apiErrorMessage";
+
+const SEARCH_DEBOUNCE_MS = 400;
 
 export default function LocationSettingScreen() {
     const router = useRouter();
@@ -35,21 +37,35 @@ export default function LocationSettingScreen() {
     const [message, setMessage] = useState<string | null>(null);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-    const loadAbortControllerRef = useRef<AbortController | null>(null);
+    const searchDebounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const settingsAbortControllerRef = useRef<AbortController | null>(null);
     const searchAbortControllerRef = useRef<AbortController | null>(null);
     const saveAbortControllerRef = useRef<AbortController | null>(null);
-    const latestLoadRequestIdRef = useRef(0);
-    const latestSearchRequestIdRef = useRef(0);
-    const savingRef = useRef(false);
+    const latestSearchIdRef = useRef(0);
 
-    const loadSettings = useCallback(async () => {
-        const requestId = latestLoadRequestIdRef.current + 1;
-        latestLoadRequestIdRef.current = requestId;
+    useEffect(() => {
+        loadSettings();
 
-        loadAbortControllerRef.current?.abort();
+        return () => {
+            clearSearchDebounceTimer();
+            settingsAbortControllerRef.current?.abort();
+            searchAbortControllerRef.current?.abort();
+            saveAbortControllerRef.current?.abort();
+        };
+    }, []);
+
+    function clearSearchDebounceTimer() {
+        if (searchDebounceTimerRef.current) {
+            clearTimeout(searchDebounceTimerRef.current);
+            searchDebounceTimerRef.current = null;
+        }
+    }
+
+    async function loadSettings() {
+        settingsAbortControllerRef.current?.abort();
 
         const abortController = new AbortController();
-        loadAbortControllerRef.current = abortController;
+        settingsAbortControllerRef.current = abortController;
 
         try {
             setLoading(true);
@@ -58,13 +74,6 @@ export default function LocationSettingScreen() {
             const settings = await getSettings({
                 signal: abortController.signal,
             });
-
-            if (
-                abortController.signal.aborted ||
-                latestLoadRequestIdRef.current !== requestId
-            ) {
-                return;
-            }
 
             setDefaultAreaNo(settings.defaultAreaNo);
             setDefaultLocationName(settings.defaultLocationName);
@@ -80,39 +89,51 @@ export default function LocationSettingScreen() {
             logApiError(error);
             setErrorMessage(getApiErrorMessage(error));
         } finally {
-            if (loadAbortControllerRef.current === abortController) {
+            if (settingsAbortControllerRef.current === abortController) {
                 setLoading(false);
-                loadAbortControllerRef.current = null;
+                settingsAbortControllerRef.current = null;
             }
         }
-    }, []);
+    }
 
-    useEffect(() => {
-        loadSettings();
+    function handleChangeKeyword(nextKeyword: string) {
+        setKeyword(nextKeyword);
+        setMessage(null);
+        setErrorMessage(null);
 
-        return () => {
-            loadAbortControllerRef.current?.abort();
-            searchAbortControllerRef.current?.abort();
-            saveAbortControllerRef.current?.abort();
-        };
-    }, [loadSettings]);
+        clearSearchDebounceTimer();
 
-    async function handleSearchArea() {
-        const trimmedKeyword = keyword.trim();
-
-        if (searching) {
-            return;
-        }
+        const trimmedKeyword = nextKeyword.trim();
 
         if (trimmedKeyword.length === 0) {
+            searchAbortControllerRef.current?.abort();
             setAreas([]);
-            setMessage(null);
-            setErrorMessage("검색할 지역명을 입력해 주세요.");
+            setSearching(false);
             return;
         }
 
-        const requestId = latestSearchRequestIdRef.current + 1;
-        latestSearchRequestIdRef.current = requestId;
+        searchDebounceTimerRef.current = setTimeout(() => {
+            searchAreasByKeyword(trimmedKeyword);
+        }, SEARCH_DEBOUNCE_MS);
+    }
+
+    async function handleSearchArea() {
+        clearSearchDebounceTimer();
+        await searchAreasByKeyword(keyword);
+    }
+
+    async function searchAreasByKeyword(searchKeyword: string) {
+        const trimmedKeyword = searchKeyword.trim();
+
+        if (trimmedKeyword.length === 0) {
+            searchAbortControllerRef.current?.abort();
+            setAreas([]);
+            setSearching(false);
+            return;
+        }
+
+        const searchId = latestSearchIdRef.current + 1;
+        latestSearchIdRef.current = searchId;
 
         searchAbortControllerRef.current?.abort();
 
@@ -130,16 +151,12 @@ export default function LocationSettingScreen() {
 
             if (
                 abortController.signal.aborted ||
-                latestSearchRequestIdRef.current !== requestId
+                latestSearchIdRef.current !== searchId
             ) {
                 return;
             }
 
             setAreas(result);
-
-            if (result.length === 0) {
-                setMessage("검색 결과가 없습니다.");
-            }
         } catch (error) {
             if (isAbortError(error)) {
                 return;
@@ -156,36 +173,30 @@ export default function LocationSettingScreen() {
     }
 
     async function handleSelectArea(area: AreaResponse) {
-        if (savingRef.current) {
+        if (savingAreaNo !== null) {
             return;
         }
 
-        savingRef.current = true;
-        setSavingAreaNo(area.areaNo);
-        setMessage(null);
-        setErrorMessage(null);
-
+        clearSearchDebounceTimer();
+        searchAbortControllerRef.current?.abort();
         saveAbortControllerRef.current?.abort();
 
         const abortController = new AbortController();
         saveAbortControllerRef.current = abortController;
 
         try {
-            const updated = await updateSettings(
-                {
-                    defaultAreaNo: area.areaNo,
-                    defaultUvThreshold,
-                    sunscreenAlertEnabled,
-                    defaultAlertTime,
-                },
-                {
-                    signal: abortController.signal,
-                }
-            );
+            setSavingAreaNo(area.areaNo);
+            setMessage(null);
+            setErrorMessage(null);
 
-            if (abortController.signal.aborted) {
-                return;
-            }
+            const updated = await updateSettings({
+                defaultAreaNo: area.areaNo,
+                defaultUvThreshold,
+                sunscreenAlertEnabled,
+                defaultAlertTime,
+            }, {
+                signal: abortController.signal,
+            });
 
             setDefaultAreaNo(updated.defaultAreaNo);
             setDefaultLocationName(updated.defaultLocationName);
@@ -202,7 +213,6 @@ export default function LocationSettingScreen() {
             setErrorMessage(getApiErrorMessage(error));
         } finally {
             if (saveAbortControllerRef.current === abortController) {
-                savingRef.current = false;
                 setSavingAreaNo(null);
                 saveAbortControllerRef.current = null;
             }
@@ -222,6 +232,8 @@ export default function LocationSettingScreen() {
         router.replace("/");
     }
 
+    const isSaving = savingAreaNo !== null;
+
     if (loading) {
         return (
             <ScreenContainer>
@@ -240,9 +252,9 @@ export default function LocationSettingScreen() {
                     <Text style={styles.title}>위치 설정</Text>
 
                     <Pressable
-                        style={[styles.backButton, savingAreaNo !== null && styles.disabledButton]}
+                        style={[styles.backButton, isSaving && styles.disabledButton]}
                         onPress={handleBack}
-                        disabled={savingAreaNo !== null}
+                        disabled={isSaving}
                     >
                         <Text style={styles.backButtonText}>뒤로</Text>
                     </Pressable>
@@ -262,23 +274,21 @@ export default function LocationSettingScreen() {
 
                     <View style={styles.searchRow}>
                         <TextInput
-                            style={styles.input}
+                            style={[styles.input, isSaving && styles.disabledInput]}
                             value={keyword}
-                            onChangeText={setKeyword}
+                            onChangeText={handleChangeKeyword}
                             placeholder="예: 서울, 종로구, 청운효자동"
                             autoCapitalize="none"
-                            editable={!searching && savingAreaNo === null}
-                            onSubmitEditing={handleSearchArea}
-                            returnKeyType="search"
+                            editable={!isSaving}
                         />
 
                         <Pressable
                             style={[
                                 styles.searchButton,
-                                (searching || savingAreaNo !== null) && styles.disabledButton,
+                                (searching || isSaving || keyword.trim().length === 0) && styles.disabledButton,
                             ]}
                             onPress={handleSearchArea}
-                            disabled={searching || savingAreaNo !== null}
+                            disabled={searching || isSaving || keyword.trim().length === 0}
                         >
                             <Text style={styles.searchButtonText}>
                                 {searching ? "검색 중" : "검색"}
@@ -300,10 +310,10 @@ export default function LocationSettingScreen() {
                                     key={area.areaNo}
                                     style={[
                                         styles.resultItem,
-                                        savingAreaNo !== null && styles.disabledResultItem,
+                                        isSaving && savingAreaNo !== area.areaNo && styles.disabledResultItem,
                                     ]}
                                     onPress={() => handleSelectArea(area)}
-                                    disabled={savingAreaNo !== null}
+                                    disabled={isSaving}
                                 >
                                     <View>
                                         <Text style={styles.resultName}>{area.displayName}</Text>
@@ -464,9 +474,6 @@ const styles = StyleSheet.create({
         justifyContent: "space-between",
         alignItems: "center",
     },
-    disabledResultItem: {
-        opacity: 0.6,
-    },
     resultName: {
         fontSize: 16,
         fontWeight: "800",
@@ -492,6 +499,13 @@ const styles = StyleSheet.create({
         fontWeight: "800",
     },
     disabledButton: {
+        opacity: 0.5,
+    },
+    disabledInput: {
         opacity: 0.6,
+        backgroundColor: "#F3F4F6",
+    },
+    disabledResultItem: {
+        opacity: 0.45,
     },
 });
