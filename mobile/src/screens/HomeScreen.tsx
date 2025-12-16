@@ -22,6 +22,13 @@ import { getSettings } from "../api/settingApi";
 import ScreenContainer from "../components/ScreenContainer";
 import { getApiErrorMessage, logApiError } from "../api/apiErrorMessage";
 
+type DashboardCacheItem = {
+    data: HomeDashboardResponse;
+    savedAt: number;
+};
+
+const DASHBOARD_CACHE_TTL_MS = 5 * 60 * 1000;
+
 export default function HomeScreen() {
     //페이지 이동 제어 router 객체 생성
     const router = useRouter();
@@ -36,7 +43,7 @@ export default function HomeScreen() {
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
     const dashboardRef = useRef<HomeDashboardResponse | null>(null);
-    const dashboardCacheRef = useRef<Record<string, HomeDashboardResponse>>({});
+    const dashboardCacheRef = useRef<Record<string, DashboardCacheItem>>({});
     const dateTypeRef = useRef<HomeDateType>("TODAY");
     const areaNoRef = useRef<string | null>(null);
     const abortControllerRef = useRef<AbortController | null>(null);
@@ -94,16 +101,30 @@ export default function HomeScreen() {
                     return;
                 }
 
-                areaNo = settings.defaultAreaNo;
-                areaNoRef.current = areaNo;
+                const nextAreaNo = settings.defaultAreaNo;
+
+                if (areaNoRef.current && areaNoRef.current !== nextAreaNo) {
+                    dashboardCacheRef.current = {};
+                }
+
+                areaNo = nextAreaNo;
+                areaNoRef.current = nextAreaNo;
             }
 
             const cacheKey = `${areaNo}:${targetDateType}`;
-            const cachedDashboard = dashboardCacheRef.current[cacheKey];
+            const cachedItem = dashboardCacheRef.current[cacheKey];
+            const now = Date.now();
+            const isCacheValid =
+                cachedItem !== undefined &&
+                now - cachedItem.savedAt < DASHBOARD_CACHE_TTL_MS;
 
-            if (!options?.forceRefresh && cachedDashboard) {
-                updateDashboard(cachedDashboard);
+            if (!options?.forceRefresh && isCacheValid) {
+                updateDashboard(cachedItem.data);
                 return;
+            }
+
+            if (cachedItem && !isCacheValid) {
+                delete dashboardCacheRef.current[cacheKey];
             }
 
             const data = await getHomeDashboard(
@@ -118,7 +139,10 @@ export default function HomeScreen() {
                 return;
             }
 
-            dashboardCacheRef.current[cacheKey] = data;
+            dashboardCacheRef.current[cacheKey] = {
+                data,
+                savedAt: Date.now(),
+            };
             updateDashboard(data);
         } catch (error) {
             if (isAbortError(error)) {
