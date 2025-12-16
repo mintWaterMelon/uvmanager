@@ -1,4 +1,4 @@
-import { apiGet } from "./client";
+import { apiGet, type ApiRequestOptions } from "./client";
 
 export type AreaResponse = {
     areaNo: string;
@@ -10,8 +10,8 @@ export type AreaResponse = {
     gridY: number;
 };
 
-export function searchAreas(keyword?: string) {
+export function searchAreas(keyword?: string, options?: ApiRequestOptions) {
     const query = keyword ? `?keyword=${encodeURIComponent(keyword)}` : "";
 
-    return apiGet<AreaResponse[]>(`/api/areas${query}`);
+    return apiGet<AreaResponse[]>(`/api/areas${query}`, options);
 }

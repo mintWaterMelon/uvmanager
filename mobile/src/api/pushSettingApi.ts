@@ -1,4 +1,4 @@
-import { apiGet, apiPut } from "./client";
+import { apiGet, apiPut, type ApiRequestOptions } from "./client";
 
 export type PushSettingRequest = {
     uvAlertEnabled: boolean;
@@ -14,13 +14,17 @@ export type PushSettingResponse = {
     alertTime: string;
 };
 
-export function getPushSettings() {
-    return apiGet<PushSettingResponse>("/api/push-settings");
+export function getPushSettings(options?: ApiRequestOptions) {
+    return apiGet<PushSettingResponse>("/api/push-settings", options);
 }
 
-export function updatePushSettings(request: PushSettingRequest) {
+export function updatePushSettings(
+    request: PushSettingRequest,
+    options?: ApiRequestOptions
+) {
     return apiPut<PushSettingResponse, PushSettingRequest>(
         "/api/push-settings",
-        request
+        request,
+        options
     );
 }

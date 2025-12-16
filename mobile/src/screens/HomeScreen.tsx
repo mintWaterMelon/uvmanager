@@ -193,7 +193,7 @@ export default function HomeScreen() {
             <ScreenContainer>
                 <View style={styles.centerContainer}>
                     <ActivityIndicator size="large" />
-                    <Text style={styles.loadingText}>홈 데이터를 불러오는 중입니다...</Text>
+                    <Text style={styles.loadingText}>최신 정보를 불러오는 중입니다</Text>
                 </View>
             </ScreenContainer>
         );
@@ -288,13 +288,6 @@ export default function HomeScreen() {
                             onPress={() => handleChangeDateType("DAY_AFTER_TOMORROW")}
                         />
                     </View>
-
-                    {isRefreshingDashboard && (
-                        <View style={styles.updatingRow}>
-                            <ActivityIndicator size="small" />
-                            <Text style={styles.updatingText}>최신 정보를 불러오는 중입니다</Text>
-                        </View>
-                    )}
                 </View>
 
                 {errorMessage && (

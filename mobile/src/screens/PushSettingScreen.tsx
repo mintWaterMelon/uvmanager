@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
     ActivityIndicator,
     Pressable,
@@ -31,57 +31,111 @@ export default function PushSettingScreen() {
     const [message, setMessage] = useState<string | null>(null);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-    useEffect(() => {
-        loadPushSettings();
-    }, []);
+    const loadAbortControllerRef = useRef<AbortController | null>(null);
+    const saveAbortControllerRef = useRef<AbortController | null>(null);
+    const latestLoadRequestIdRef = useRef(0);
+    const savingRef = useRef(false);
 
-    async function loadPushSettings() {
+    const loadPushSettings = useCallback(async () => {
+        const requestId = latestLoadRequestIdRef.current + 1;
+        latestLoadRequestIdRef.current = requestId;
+
+        loadAbortControllerRef.current?.abort();
+
+        const abortController = new AbortController();
+        loadAbortControllerRef.current = abortController;
+
         try {
             setLoading(true);
             setErrorMessage(null);
 
-            const settings = await getPushSettings();
+            const settings = await getPushSettings({
+                signal: abortController.signal,
+            });
+
+            if (
+                abortController.signal.aborted ||
+                latestLoadRequestIdRef.current !== requestId
+            ) {
+                return;
+            }
 
             setUvAlertEnabled(settings.uvAlertEnabled);
             setUvAlertThreshold(String(settings.uvAlertThreshold));
             setAlertTime(formatTime(settings.alertTime));
         } catch (error) {
+            if (isAbortError(error)) {
+                return;
+            }
+
             logApiError(error);
             setErrorMessage(getApiErrorMessage(error));
         } finally {
-            setLoading(false);
+            if (loadAbortControllerRef.current === abortController) {
+                setLoading(false);
+                loadAbortControllerRef.current = null;
+            }
         }
-    }
+    }, []);
+
+    useEffect(() => {
+        loadPushSettings();
+
+        return () => {
+            loadAbortControllerRef.current?.abort();
+            saveAbortControllerRef.current?.abort();
+        };
+    }, [loadPushSettings]);
 
     async function handleSave() {
+        if (savingRef.current) {
+            return;
+        }
+
+        const threshold = Number(uvAlertThreshold);
+
+        setMessage(null);
+        setErrorMessage(null);
+
+        if (Number.isNaN(threshold)) {
+            setErrorMessage("자외선 알림 기준값은 숫자로 입력해야 합니다.");
+            return;
+        }
+
+        if (threshold < 0 || threshold > 11) {
+            setErrorMessage("자외선 알림 기준값은 0 이상 11 이하로 입력해야 합니다.");
+            return;
+        }
+
+        if (!alertTime.match(/^([01]\d|2[0-3]):[0-5]\d$/)) {
+            setErrorMessage("알림 시간은 HH:mm 형식으로 입력해야 합니다. 예: 08:00");
+            return;
+        }
+
+        savingRef.current = true;
+        setSaving(true);
+
+        saveAbortControllerRef.current?.abort();
+
+        const abortController = new AbortController();
+        saveAbortControllerRef.current = abortController;
+
         try {
-            setSaving(true);
-            setMessage(null);
-            setErrorMessage(null);
+            const updated = await updatePushSettings(
+                {
+                    uvAlertEnabled,
+                    uvAlertThreshold: threshold,
+                    dustAlertEnabled: false,
+                    alertTime,
+                },
+                {
+                    signal: abortController.signal,
+                }
+            );
 
-            const threshold = Number(uvAlertThreshold);
-
-            if (Number.isNaN(threshold)) {
-                setErrorMessage("자외선 알림 기준값은 숫자로 입력해야 합니다.");
+            if (abortController.signal.aborted) {
                 return;
             }
-
-            if (threshold < 0 || threshold > 11) {
-                setErrorMessage("자외선 알림 기준값은 0 이상 11 이하로 입력해야 합니다.");
-                return;
-            }
-
-            if (!alertTime.match(/^([01]\d|2[0-3]):[0-5]\d$/)) {
-                setErrorMessage("알림 시간은 HH:mm 형식으로 입력해야 합니다. 예: 08:00");
-                return;
-            }
-
-            const updated = await updatePushSettings({
-                uvAlertEnabled,
-                uvAlertThreshold: threshold,
-                dustAlertEnabled: false,
-                alertTime,
-            });
 
             setUvAlertEnabled(updated.uvAlertEnabled);
             setUvAlertThreshold(String(updated.uvAlertThreshold));
@@ -89,10 +143,18 @@ export default function PushSettingScreen() {
 
             setMessage("푸시 설정이 저장되었습니다.");
         } catch (error) {
+            if (isAbortError(error)) {
+                return;
+            }
+
             logApiError(error);
             setErrorMessage(getApiErrorMessage(error));
         } finally {
-            setSaving(false);
+            if (saveAbortControllerRef.current === abortController) {
+                savingRef.current = false;
+                setSaving(false);
+                saveAbortControllerRef.current = null;
+            }
         }
     }
 
@@ -113,7 +175,11 @@ export default function PushSettingScreen() {
                 <View style={styles.headerRow}>
                     <Text style={styles.title}>푸시 설정</Text>
 
-                    <Pressable style={styles.backButton} onPress={() => router.replace("/settings")}>
+                    <Pressable
+                        style={styles.backButton}
+                        onPress={() => router.replace("/settings")}
+                        disabled={saving}
+                    >
                         <Text style={styles.backButtonText}>뒤로</Text>
                     </Pressable>
                 </View>
@@ -130,6 +196,7 @@ export default function PushSettingScreen() {
                         <Switch
                             value={uvAlertEnabled}
                             onValueChange={setUvAlertEnabled}
+                            disabled={saving}
                         />
                     </View>
 
@@ -139,11 +206,13 @@ export default function PushSettingScreen() {
                             label="8 이상"
                             active={uvAlertThreshold === "8"}
                             onPress={() => setUvAlertThreshold("8")}
+                            disabled={saving}
                         />
                         <ThresholdButton
                             label="11 이상"
                             active={uvAlertThreshold === "11"}
                             onPress={() => setUvAlertThreshold("11")}
+                            disabled={saving}
                         />
                     </View>
 
@@ -153,6 +222,7 @@ export default function PushSettingScreen() {
                         onChangeText={setUvAlertThreshold}
                         placeholder="예: 8"
                         keyboardType="number-pad"
+                        editable={!saving}
                     />
                 </View>
 
@@ -168,6 +238,7 @@ export default function PushSettingScreen() {
                         value={alertTime}
                         onChangeText={setAlertTime}
                         placeholder="예: 08:00"
+                        editable={!saving}
                     />
                 </View>
 
@@ -179,6 +250,7 @@ export default function PushSettingScreen() {
                     onPress={handleSave}
                     disabled={saving}
                 >
+                    {saving && <ActivityIndicator size="small" color="#FFFFFF" />}
                     <Text style={styles.saveButtonText}>
                         {saving ? "저장 중..." : "푸시 설정 저장"}
                     </Text>
@@ -192,15 +264,22 @@ function ThresholdButton({
     label,
     active,
     onPress,
+    disabled,
 }: {
     label: string;
     active: boolean;
     onPress: () => void;
+    disabled?: boolean;
 }) {
     return (
         <Pressable
-            style={[styles.thresholdButton, active && styles.thresholdButtonActive]}
+            style={[
+                styles.thresholdButton,
+                active && styles.thresholdButtonActive,
+                disabled && styles.disabledButton,
+            ]}
             onPress={onPress}
+            disabled={disabled}
         >
             <Text
                 style={[
@@ -212,6 +291,10 @@ function ThresholdButton({
             </Text>
         </Pressable>
     );
+}
+
+function isAbortError(error: unknown) {
+    return error instanceof Error && error.name === "AbortError";
 }
 
 function formatTime(value: string) {
@@ -343,6 +426,9 @@ const styles = StyleSheet.create({
         paddingVertical: 16,
         borderRadius: 14,
         alignItems: "center",
+        justifyContent: "center",
+        flexDirection: "row",
+        gap: 8,
     },
     disabledButton: {
         opacity: 0.6,

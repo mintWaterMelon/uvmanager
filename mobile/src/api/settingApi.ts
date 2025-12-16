@@ -19,6 +19,13 @@ export function getSettings(options?: ApiRequestOptions) {
     return apiGet<SettingResponse>("/api/settings", options);
 }
 
-export function updateSettings(request: SettingRequest) {
-    return apiPut<SettingResponse, SettingRequest>("/api/settings", request);
+export function updateSettings(
+    request: SettingRequest,
+    options?: ApiRequestOptions
+) {
+    return apiPut<SettingResponse, SettingRequest>(
+        "/api/settings",
+        request,
+        options
+    );
 }
