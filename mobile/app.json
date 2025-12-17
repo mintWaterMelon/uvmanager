@@ -9,7 +9,7 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "android": {
-      "package": "com.mintwatermelon.uvalert",
+      "package": "com.mintwatermelon.uvmanager",
       "versionCode": 1,
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
@@ -21,7 +21,7 @@
       "predictiveBackGestureEnabled": false
     },
     "ios": {
-      "bundleIdentifier": "com.mintwatermelon.uvalert",
+      "bundleIdentifier": "com.mintwatermelon.uvmanager",
       "buildNumber": "1",
       "supportsTablet": true
     },

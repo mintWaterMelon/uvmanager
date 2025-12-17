@@ -1,17 +1,17 @@
 services:
   postgres:
     image: postgres:16
-    container_name: uvalert-postgres
+    container_name: uvmanger-postgres
     ports:
       - "5432:5432"
     environment:
-      POSTGRES_DB: uvalert
-      POSTGRES_USER: uvalert
-      POSTGRES_PASSWORD: uvalert
+      POSTGRES_DB: uvmanger
+      POSTGRES_USER: uvmanger
+      POSTGRES_PASSWORD: uvmanger
     volumes:
-      - uvalert-postgres-data:/var/lib/postgresql/data
+      - uvmanger-postgres-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U uvalert -d uvalert"]
+      test: ["CMD-SHELL", "pg_isready -U uvmanger -d uvmanger"]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -19,18 +19,18 @@ services:
   backend:
     build:
       context: ./backend
-    container_name: uvalert-backend
+    container_name: uvmanger-backend
     ports:
       - "8080:8080"
     environment:
       SPRING_PROFILES_ACTIVE: docker
-      DATABASE_URL: jdbc:postgresql://postgres:5432/uvalert
-      DATABASE_USERNAME: uvalert
-      DATABASE_PASSWORD: uvalert
+      DATABASE_URL: jdbc:postgresql://postgres:5432/uvmanger
+      DATABASE_USERNAME: uvmanger
+      DATABASE_PASSWORD: uvmanger
       KMA_SERVICE_KEY: ${KMA_SERVICE_KEY}
     depends_on:
       postgres:
         condition: service_healthy
 
 volumes:
-  uvalert-postgres-data:
+  uvmanger-postgres-data:

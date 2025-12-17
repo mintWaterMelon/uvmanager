@@ -62,4 +62,4 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Build Docker image
-        run: docker build -t uvalert-backend:ci ./backend
+        run: docker build -t uvmanger-backend:ci ./backend

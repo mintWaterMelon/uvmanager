@@ -1,6 +1,6 @@
-# UV Alert
+# UV manger
 
-UV Alert는 기상청 공공데이터를 활용하여 사용자가 선택한 지역의 날씨, 온도, 자외선지수, 강수확률 정보를 제공하는 모바일 앱 프로젝트입니다.
+UV Manger는 기상청 공공데이터를 활용하여 사용자가 선택한 지역의 날씨, 온도, 자외선지수, 강수확률 정보를 제공하는 모바일 앱 프로젝트입니다.
 
 백엔드는 Java 17과 Spring Boot 3 기반 REST API로 구현하고, 모바일 앱은 Expo React Native 기반으로 구현합니다.
 
@@ -8,7 +8,7 @@ UV Alert는 기상청 공공데이터를 활용하여 사용자가 선택한 지
 
 ## 1. 프로젝트 소개
 
-UV Alert는 사용자가 선택한 지역을 기준으로 오늘, 내일, 모레의 시간대별 날씨와 자외선 정보를 확인할 수 있는 앱입니다.
+UV Manger는 사용자가 선택한 지역을 기준으로 오늘, 내일, 모레의 시간대별 날씨와 자외선 정보를 확인할 수 있는 앱입니다.
 
 홈 화면에서는 다음 정보를 제공합니다.
 
@@ -103,9 +103,9 @@ UV Alert는 사용자가 선택한 지역을 기준으로 오늘, 내일, 모레
 ## 4. 프로젝트 구조
 
 ```text
-uvalert
+uvmanger
 ├─ backend
-│  ├─ src/main/java/com/mintWaterMelon/uvalert
+│  ├─ src/main/java/com/mintWaterMelon/uvmanger
 │  │  ├─ area
 │  │  ├─ home
 │  │  ├─ push
@@ -236,7 +236,7 @@ $env:KMA_SERVICE_KEY="본인_기상청_API_KEY"
 
 ```bash
 git clone <repository-url>
-cd uvalert
+cd uvmanger
 ```
 
 ### 2. Java 버전 확인
@@ -269,10 +269,10 @@ PostgreSQL 접속 정보:
 |---|---|
 | Host | localhost |
 | Port | 5432 |
-| Database | uvalert |
-| Username | uvalert |
-| Password | uvalert |
-| JDBC URL | `jdbc:postgresql://localhost:5432/uvalert` |
+| Database | uvmanger |
+| Username | uvmanger |
+| Password | uvmanger |
+| JDBC URL | `jdbc:postgresql://localhost:5432/uvmanger` |
 
 컨테이너 확인:
 

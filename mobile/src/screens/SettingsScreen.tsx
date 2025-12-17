@@ -66,7 +66,7 @@ export default function SettingsScreen() {
                 </View>
 
                 <View style={styles.infoCard}>
-                    <Text style={styles.infoTitle}>UV Alert</Text>
+                    <Text style={styles.infoTitle}>UV manger</Text>
                     <Text style={styles.infoText}>
                         기상청 데이터를 기반으로 날씨와 자외선 지수를 확인하는 앱입니다.
                     </Text>
