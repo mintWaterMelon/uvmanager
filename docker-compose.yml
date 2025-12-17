@@ -8,6 +8,7 @@ services:
       POSTGRES_DB: uvmanger
       POSTGRES_USER: uvmanger
       POSTGRES_PASSWORD: uvmanger
+      TZ: Asia/Seoul
     volumes:
       - uvmanger-postgres-data:/var/lib/postgresql/data
     healthcheck:
@@ -28,6 +29,7 @@ services:
       DATABASE_USERNAME: uvmanger
       DATABASE_PASSWORD: uvmanger
       KMA_SERVICE_KEY: ${KMA_SERVICE_KEY}
+      TZ: Asia/Seoul
     depends_on:
       postgres:
         condition: service_healthy
